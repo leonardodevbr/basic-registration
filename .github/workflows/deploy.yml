@@ -19,10 +19,14 @@ jobs:
           ssh-private-key: ${{ secrets.SSH_KEY }}
 
       - name: Copy files to HostGator
+        env:
+          HOST: ${{ secrets.HOST }}
+          USERNAME: ${{ secrets.USERNAME }}
+          DIRECTORY: ${{ secrets.DIRECTORY }}
         run: |
           rsync -avz \
             -e "ssh -o StrictHostKeyChecking=no" \
-            ./ ${{ secrets.HOST }}@${{ secrets.HOST }}:${{ secrets.DIRECTORY }}
+            ./ $USERNAME@$HOST:$DIRECTORY
 
       - name: Run post-deploy commands
         env:
