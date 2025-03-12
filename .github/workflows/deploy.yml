@@ -18,18 +18,11 @@ jobs:
         with:
           ssh-private-key: ${{ secrets.SSH_KEY }}
 
-      - name: Test SSH Connection
-        run: ssh -o StrictHostKeyChecking=no ${{ secrets.USERNAME }}@${{ secrets.HOST }} "echo 'Conexão SSH bem-sucedida!'"
-
       - name: Copy files to HostGator
-        env:
-          HOST: ${{ secrets.HOST }}
-          USERNAME: ${{ secrets.USERNAME }}
-          DIRECTORY: ${{ secrets.DIRECTORY }}
         run: |
           rsync -avz \
             -e "ssh -o StrictHostKeyChecking=no" \
-            ./ $USERNAME@$HOST:$DIRECTORY
+            ./ ${{ secrets.HOST }}@${{ secrets.HOST }}:${{ secrets.DIRECTORY }}
 
       - name: Run post-deploy commands
         env:
