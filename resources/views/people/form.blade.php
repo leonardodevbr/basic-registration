@@ -8,20 +8,37 @@
     </div>
 @endif
 
-<form action="{{ $action }}" class="grid grid-cols-2 gap-4" method="POST">
+<form id="person-register-form" action="{{ $action }}" class="grid grid-cols-2 gap-4" method="POST">
     @csrf
-    @if($method === 'PUT')
-        @method('PUT')
-    @endif
+    @method($method)
     <div class="flex flex-col">
         <label class="block">Selfie:</label>
-        <video id="video" class="border rounded w-full" autoplay></video>
-        <canvas id="canvas" class="border rounded w-full"></canvas>
-        <input type="hidden" name="selfie" id="selfie">
-        <button type="button" id="capture-btn" class="mt-2 px-4 py-2 bg-blue-500 text-white rounded">
-            Tirar Selfie
-        </button>
+
+        <!-- Aqui verificamos se existe uma selfie salva ou capturada -->
+        @php
+            $selfieValue = old('selfie', $person->selfie_url ?? null);
+        @endphp
+
+        @if($selfieValue)
+            <img id="selfie-preview" class="border rounded w-full mt-2" src="{{ $selfieValue }}">
+            <video id="video" class="border rounded w-full" autoplay style="display: none;"></video>
+        @else
+            <video id="video" class="border rounded w-full" autoplay></video>
+            <img id="selfie-preview" class="border rounded w-full mt-2" style="display: none;">
+        @endif
+
+        <canvas id="canvas" class="border rounded w-full" style="display: none;"></canvas>
+        <input type="hidden" name="selfie" id="selfie" value="{{ $selfieValue }}">
+
+        <div class="flex mt-2 space-x-2">
+            <button type="button" id="flip-btn" class="px-4 py-2 bg-gray-500 text-white rounded">Inverter</button>
+            <button type="button" id="capture-btn" class="px-4 py-2 bg-blue-500 text-white rounded">
+                {{ $selfieValue ? 'Capturar Novamente' : 'Tirar Selfie' }}
+            </button>
+            <button type="button" id="cancel-btn" class="px-4 py-2 bg-red-500 text-white rounded" style="display: {{ $selfieValue ? 'block' : 'none' }};">Cancelar</button>
+        </div>
     </div>
+
     <div class="flex flex-col">
         <div class="mb-4">
             <label class="block">Nome:</label>

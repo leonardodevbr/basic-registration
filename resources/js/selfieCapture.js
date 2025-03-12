@@ -1,68 +1,111 @@
-import { FaceMesh } from "@mediapipe/face_mesh";
 import { Camera } from "@mediapipe/camera_utils";
 
 document.addEventListener("DOMContentLoaded", async () => {
+    const formElement = document.getElementById("person-register-form");
+    if (!formElement) return;
+
     const videoElement = document.getElementById("video");
     const canvasElement = document.getElementById("canvas");
     const captureButton = document.getElementById("capture-btn");
+    const cancelButton = document.getElementById("cancel-btn");
+    const flipButton = document.getElementById("flip-btn");
     const selfieInput = document.getElementById("selfie");
+    let selfiePreview = document.getElementById("selfie-preview");
 
-    const canvasCtx = canvasElement.getContext("2d");
+    let isFlipped = false;
+    let camera;
+    let originalSelfie = selfieInput.value; // Armazena a selfie original (caso tenha)
 
-    const faceMesh = new FaceMesh({
-        locateFile: (file) =>
-            `https://cdn.jsdelivr.net/npm/@mediapipe/face_mesh/${file}`,
-    });
-
-    faceMesh.setOptions({
-        maxNumFaces: 1,
-        refineLandmarks: true,
-        minDetectionConfidence: 0.5,
-        minTrackingConfidence: 0.5,
-    });
-
-    faceMesh.onResults((results) => {
-        canvasCtx.clearRect(0, 0, canvasElement.width, canvasElement.height);
-
-        if (results.multiFaceLandmarks.length > 0) {
-            const face = results.multiFaceLandmarks[0];
-
-            // Desenha o vídeo no canvas
-            canvasCtx.drawImage(videoElement, 0, 0, canvasElement.width, canvasElement.height);
-
-            // Desenha um retângulo ao redor do rosto detectado
-            canvasCtx.strokeStyle = "blue";
-            canvasCtx.lineWidth = 2;
-            const minX = Math.min(...face.map((p) => p.x)) * canvasElement.width;
-            const minY = Math.min(...face.map((p) => p.y)) * canvasElement.height;
-            const maxX = Math.max(...face.map((p) => p.x)) * canvasElement.width;
-            const maxY = Math.max(...face.map((p) => p.y)) * canvasElement.height;
-            canvasCtx.strokeRect(minX, minY, maxX - minX, maxY - minY);
+    function startCamera() {
+        videoElement.style.display = "block";
+        if (!camera) {
+            camera = new Camera(videoElement, {
+                onFrame: async () => {},
+                width: 500,
+                height: 500,
+            });
         }
-    });
+        camera.start();
+    }
 
-    const camera = new Camera(videoElement, {
-        onFrame: async () => {
-            await faceMesh.send({ image: videoElement });
-        },
-        width: 640,
-        height: 480,
-    });
+    function stopCamera() {
+        if (camera) {
+            camera.stop();
+        }
+        videoElement.style.display = "none";
+    }
 
-    camera.start();
+    function showSelfie(imageSrc) {
+        selfiePreview.src = imageSrc;
+        selfiePreview.style.display = "block";
+        videoElement.style.display = "none";
+        canvasElement.style.display = "none";
+    }
+
+    // 🔥 **Correção para iniciar a câmera automaticamente se não houver selfie**
+    if (!selfieInput.value || selfieInput.value === "") {
+        startCamera();
+        selfiePreview.style.display = "none";
+        videoElement.style.display = "block";
+        captureButton.innerText = "Tirar Selfie";
+    } else {
+        selfiePreview.style.display = "block";
+        videoElement.style.display = "none";
+        captureButton.innerText = "Capturar Novamente";
+        cancelButton.style.display = "none";
+    }
+
+    flipButton.addEventListener("click", () => {
+        isFlipped = !isFlipped;
+        videoElement.style.transform = isFlipped ? "scaleX(-1)" : "scaleX(1)";
+    });
 
     captureButton.addEventListener("click", () => {
-        // Limpa o canvas antes de capturar
-        canvasCtx.clearRect(0, 0, canvasElement.width, canvasElement.height);
+        if (videoElement.style.display === "none") {
+            // Se já houver uma imagem carregada e for para capturar novamente
+            videoElement.style.display = "block";
+            selfiePreview.style.display = "none";
+            startCamera();
+            captureButton.innerText = "Tirar Selfie";
+            cancelButton.style.display = "block";
+            return;
+        }
 
-        // Desenha apenas o vídeo sem os retângulos
+        // Captura a imagem e exibe no lugar do vídeo
+        canvasElement.width = videoElement.videoWidth;
+        canvasElement.height = videoElement.videoHeight;
+        const canvasCtx = canvasElement.getContext("2d");
+
+        if (isFlipped) {
+            canvasCtx.translate(canvasElement.width, 0);
+            canvasCtx.scale(-1, 1);
+        }
+
         canvasCtx.drawImage(videoElement, 0, 0, canvasElement.width, canvasElement.height);
 
-        // Converter a selfie para base64
+        if (isFlipped) {
+            canvasCtx.setTransform(1, 0, 0, 1, 0, 0);
+        }
+
         const imageData = canvasElement.toDataURL("image/png");
         selfieInput.value = imageData;
+        showSelfie(imageData);
 
-        captureButton.innerText = "Selfie Capturada!";
-        captureButton.disabled = true;
+        captureButton.innerText = "Capturar Novamente";
+        cancelButton.style.display = "block";
+        stopCamera();
+    });
+
+    cancelButton.addEventListener("click", () => {
+        if (originalSelfie) {
+            showSelfie(originalSelfie);
+            selfieInput.value = originalSelfie;
+        } else {
+            videoElement.style.display = "block";
+            selfiePreview.style.display = "none";
+            startCamera();
+        }
+        captureButton.innerText = "Capturar Novamente";
+        cancelButton.style.display = "none";
     });
 });

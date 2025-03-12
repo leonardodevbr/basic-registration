@@ -4,10 +4,9 @@ namespace App\Http\Controllers;
 use App\Http\Requests\PersonStoreRequest;
 use App\Http\Requests\PersonUpdateRequest;
 use App\Models\Person;
-use App\Services\FaceRecognitionService;
-use App\Services\GoogleVisionService;
 use Google\Cloud\Storage\StorageClient;
-use Illuminate\Support\Facades\Storage;
+use Intervention\Image\Drivers\Gd\Driver;
+use Intervention\Image\ImageManager;
 
 class PersonController extends Controller
 {
@@ -24,27 +23,41 @@ class PersonController extends Controller
 
     public function store(PersonStoreRequest $request)
     {
-        // Decodificar a selfie
         $imageData = base64_decode(str_replace('data:image/png;base64,', '', $request->selfie));
-        $imagePath = storage_path('app/temp_selfie.png');
-        file_put_contents($imagePath, $imageData);
 
-        // Verificar se a selfie tem um rosto válido
-        if (!GoogleVisionService::detectFace($imagePath)) {
-            unlink($imagePath);
-            return redirect()->back()->withErrors('Nenhum rosto detectado na selfie.');
-        }
+        // Criar nomes únicos
+        $selfieName = 'selfies/' . uniqid() . '.png';
+        $thumbName = 'selfies/thumbs/' . uniqid() . '.png';
 
-        // Salvar no Laravel Storage
-        $imageName = 'selfies/' . uniqid() . '.png';
-        Storage::disk('public')->put($imageName, $imageData);
+        // Criar as imagens com Intervention
+        $manager = new ImageManager(new Driver());
+
+        // Criar a imagem completa
+        $imageFull = $manager->read($imageData)
+            ->cover(500, 500) // Recorte quadrado centralizado
+            ->encode();
+
+        // Criar a miniatura quadrada sem distorção
+        $imageThumb = $manager->read($imageData)
+            ->cover(150, 150) // Mantém proporção e corta centralizado
+            ->encode();
+
+        // Inicializa o Google Cloud Storage
+        $storage = new StorageClient(['keyFilePath' => env('GOOGLE_CLOUD_KEY_FILE_PATH')]);
+        $bucket = $storage->bucket(env('GOOGLE_CLOUD_STORAGE_BUCKET'));
+
+        // Upload da imagem grande
+        $bucket->upload($imageFull, ['name' => $selfieName]);
+        // Upload da thumbnail
+        $bucket->upload($imageThumb, ['name' => $thumbName]);
 
         // Criar o registro no banco
         $person = Person::create([
             'name' => $request->validated()['name'],
             'cpf' => $request->validated()['cpf'],
             'phone' => $request->validated()['phone'],
-            'selfie_path' => $imageName,
+            'selfie_path' => $selfieName,
+            'thumb_path' => $thumbName, // Salvamos o caminho da versão menor
         ]);
 
         return redirect()->route('people.index')->with('success', 'Pessoa cadastrada com selfie!');
@@ -57,9 +70,54 @@ class PersonController extends Controller
 
     public function update(PersonUpdateRequest $request, Person $person)
     {
-        $person->update($request->validated());
+        $data = $request->validated();
 
-        return redirect()->route('people.index')->with('success', 'Pessoa atualizada com sucesso!');
+        // Inicializa o Google Cloud Storage
+        $storage = new StorageClient(['keyFilePath' => env('GOOGLE_CLOUD_KEY_FILE_PATH')]);
+        $bucket = $storage->bucket(env('GOOGLE_CLOUD_STORAGE_BUCKET'));
+
+        if ($request->has('selfie') && !empty($request->selfie)) {
+            // Decodificar a nova selfie
+            $imageData = base64_decode(str_replace('data:image/png;base64,', '', $request->selfie));
+
+            // Criar nomes únicos para a nova imagem
+            $selfieName = 'selfies/' . uniqid() . '.png';
+            $thumbName = 'selfies/thumbs/' . uniqid() . '.png';
+
+            // Criar imagens com Intervention Image
+            $manager = new ImageManager(new Driver());
+
+            // Criar a imagem original
+            $imageFull = $manager->read($imageData)
+                ->cover(600, 600) // Recorte quadrado centralizado
+                ->encode();
+
+            // Criar a miniatura quadrada sem distorção
+            $imageThumb = $manager->read($imageData)
+                ->cover(150, 150) // Recorte quadrado centralizado
+                ->encode();
+
+            // Excluir as imagens antigas no Google Cloud Storage
+            if ($person->selfie_path) {
+                $bucket->object($person->selfie_path)->delete();
+            }
+            if ($person->thumb_path) {
+                $bucket->object($person->thumb_path)->delete();
+            }
+
+            // Upload das novas imagens
+            $bucket->upload($imageFull, ['name' => $selfieName]);
+            $bucket->upload($imageThumb, ['name' => $thumbName]);
+
+            // Atualizar os caminhos no banco de dados
+            $data['selfie_path'] = $selfieName;
+            $data['thumb_path'] = $thumbName;
+        }
+
+        // Atualizar os dados da pessoa
+        $person->update($data);
+
+        return redirect()->route('people.index')->with('success', 'Dados da pessoa atualizados com sucesso!');
     }
 
     public function destroy(Person $person)
@@ -67,5 +125,11 @@ class PersonController extends Controller
         $person->delete();
 
         return redirect()->route('people.index')->with('success', 'Pessoa excluída com sucesso!');
+    }
+
+    public function show($personId)
+    {
+        $person = Person::find($personId);
+        return response()->json($person);
     }
 }

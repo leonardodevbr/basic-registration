@@ -27,6 +27,7 @@ class PersonUpdateRequest extends FormRequest
             'name' => 'required|string|max:255',
             'cpf' => "required|string|size:11|unique:people,cpf,{$personId}",
             'phone' => 'nullable|string|min:10|max:11',
+            'selfie' => 'required|string|starts_with:data:image/png;base64,',
         ];
     }
 
@@ -39,6 +40,8 @@ class PersonUpdateRequest extends FormRequest
             'cpf.size' => 'O CPF deve conter exatamente 11 números.',
             'phone.min' => 'O telefone deve conter no mínimo 10 números.',
             'phone.max' => 'O telefone deve conter no máximo 11 números.',
+            'selfie.required' => 'A selfie é obrigatória.',
+            'selfie.starts_with' => 'A selfie deve ser uma imagem válida em base64.',
         ];
     }
 }
