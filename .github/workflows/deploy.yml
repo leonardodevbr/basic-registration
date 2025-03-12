@@ -18,6 +18,9 @@ jobs:
         with:
           ssh-private-key: ${{ secrets.SSH_KEY }}
 
+      - name: Test SSH Connection
+        run: ssh -o StrictHostKeyChecking=no $USERNAME@$HOST "echo 'Conexão SSH bem-sucedida!'"
+
       - name: Copy files to HostGator
         env:
           HOST: ${{ secrets.HOST }}
