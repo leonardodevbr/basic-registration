@@ -23,6 +23,7 @@
                             <th class="py-3 px-6 text-left">Nome</th>
                             <th class="py-3 px-6 text-left">CPF</th>
                             <th class="py-3 px-6 text-left">Telefone</th>
+                            <th class="py-3 px-6 text-left">Selfie</th>
                             <th class="py-3 px-6 text-left">Ações</th>
                         </tr>
                         </thead>
@@ -32,6 +33,13 @@
                                 <td class="py-4 px-6">{{ $person->name }}</td>
                                 <td class="py-4 px-6">{{ preg_replace("/(\d{3})(\d{3})(\d{3})(\d{2})/", "$1.$2.$3-$4", $person->cpf) }}</td>
                                 <td class="py-4 px-6">{{ preg_replace("/(\d{2})(\d{5})(\d{4})/", "($1) $2-$3", $person->phone) }}</td>
+                                <td class="py-4 px-6">
+                                    @if($person->selfie_path)
+                                        <img src="{{ asset('storage/' . $person->selfie_path) }}" alt="Selfie" class="w-16 h-16 rounded-full">
+                                    @else
+                                        <span class="text-gray-500">Sem selfie</span>
+                                    @endif
+                                </td>
                                 <td class="py-4 px-6">
                                     <a href="{{ route('people.edit', $person) }}" class="text-indigo-600 hover:text-indigo-900">Editar</a>
                                     <form action="{{ route('people.destroy', $person) }}" method="POST" class="inline-block ml-3 delete-form">

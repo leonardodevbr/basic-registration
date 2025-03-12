@@ -16,6 +16,7 @@ return new class extends Migration
             $table->string('name');
             $table->string('cpf', 14)->unique();
             $table->string('phone')->nullable();
+            $table->string('selfie_path')->nullable();
             $table->timestamps();
         });
     }

@@ -19,6 +19,7 @@ use Illuminate\Database\Eloquent\Relations\HasMany;
  * @property string $name
  * @property string $cpf
  * @property string|null $phone
+ * @property string|null $selfie_path
  * @property Carbon|null $created_at
  * @property Carbon|null $updated_at
  * 
@@ -34,7 +35,8 @@ class Person extends Model
 	protected $fillable = [
 		'name',
 		'cpf',
-		'phone'
+		'phone',
+		'selfie_path'
 	];
 
 	public function benefit_deliveries(): HasMany
