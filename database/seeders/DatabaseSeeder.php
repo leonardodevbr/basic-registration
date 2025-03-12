@@ -15,11 +15,10 @@ class DatabaseSeeder extends Seeder
     {
         User::create([
             'name' => 'Super Admin',
-            'email' => 'admin@cras.com',
+            'email' => 'admin@admin.com',
             'password' => bcrypt('senha123'),
         ]);
 
         Unit::create(['name' => 'CRAS Cafarnaum', 'city' => 'Cafarnaum-BA']);
-        Unit::create(['name' => 'CRAS Morro do Chapéu', 'city' => 'Morro do Chapéu-BA']);
     }
 }
