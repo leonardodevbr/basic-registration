@@ -14,20 +14,21 @@
     <div class="flex flex-col">
         <label class="block">Selfie:</label>
 
-        <!-- Aqui verificamos se existe uma selfie salva ou capturada -->
         @php
             $selfieValue = old('selfie', $person->selfie_url ?? null);
         @endphp
 
-        @if($selfieValue)
-            <img id="selfie-preview" class="border rounded w-full mt-2" src="{{ $selfieValue }}">
-            <video id="video" class="border rounded w-full" autoplay style="display: none;"></video>
-        @else
-            <video id="video" class="border rounded w-full" autoplay></video>
-            <img id="selfie-preview" class="border rounded w-full mt-2" style="display: none;">
-        @endif
+        <div id="error-message" class="text-red-500 mt-2 hidden"></div>
 
-        <canvas id="canvas" class="border rounded w-full" style="display: none;"></canvas>
+        <div class="video-container" style="{{ $selfieValue ? 'display: none;' : '' }}">
+            <video id="video" class="border rounded w-full" autoplay></video>
+            <canvas id="canvas"></canvas>
+        </div>
+
+        <img id="selfie-preview" class="border rounded w-full mt-2"
+             src="{{ $selfieValue }}"
+             style="{{ $selfieValue ? '' : 'display: none;' }}">
+
         <input type="hidden" name="selfie" id="selfie" value="{{ $selfieValue }}">
 
         <div class="flex mt-2 space-x-2">
@@ -35,9 +36,12 @@
             <button type="button" id="capture-btn" class="px-4 py-2 bg-blue-500 text-white rounded">
                 {{ $selfieValue ? 'Capturar Novamente' : 'Tirar Selfie' }}
             </button>
-            <button type="button" id="cancel-btn" class="px-4 py-2 bg-red-500 text-white rounded" style="display: {{ $selfieValue ? 'block' : 'none' }};">Cancelar</button>
+            <button type="button" id="cancel-btn" class="px-4 py-2 bg-red-500 text-white rounded"
+                    style="display: {{ $selfieValue ? 'block' : 'none' }};">Cancelar
+            </button>
         </div>
     </div>
+
 
     <div class="flex flex-col">
         <div class="mb-4">
@@ -56,5 +60,6 @@
                    value="{{ old('phone', $person->phone ?? '') }}">
         </div>
         <button class="px-4 self-end py-2 bg-indigo-500 text-white rounded">Salvar</button>
+        <a class="px-4 self-end py-2 bg-gray-500 mt-[auto] text-white rounded" href="{{route('people.index')}}">Voltar</a>
     </div>
 </form>
