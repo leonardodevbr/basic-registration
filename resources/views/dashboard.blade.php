@@ -4,7 +4,7 @@
             <!-- Breadcrumbs -->
             <nav class="text-sm text-gray-500 mb-4">
                 <ol class="flex">
-                    <li>Dashboard</li>
+                    <li>- Dashboard</li>
                 </ol>
             </nav>
 
