@@ -27,19 +27,3 @@ jobs:
           rsync -avz \
             -e "ssh -o StrictHostKeyChecking=no" \
             ./ $USERNAME@$HOST:$DIRECTORY
-
-      - name: Run post-deploy commands
-        env:
-          HOST: ${{ secrets.HOST }}
-          USERNAME: ${{ secrets.USERNAME }}
-          DIRECTORY: ${{ secrets.DIRECTORY }}
-        run: |
-          ssh -o StrictHostKeyChecking=no -o IdentitiesOnly=yes "${USERNAME}@${HOST}" "
-            cd ${DIRECTORY} || exit 1
-            if [ -f artisan ]; then
-              php artisan migrate --force
-            else
-              echo 'Arquivo artisan não encontrado no diretório especificado.'
-              exit 1
-            fi
-          "
