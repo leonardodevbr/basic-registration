@@ -1,9 +1,9 @@
 <!-- resources/views/people/index.blade.php -->
 <x-app-layout>
-    <div class="py-12">
+    <div class="md:py-12">
         <div class="max-w-7xl mx-auto sm:px-6 lg:px-8">
             <!-- Breadcrumbs -->
-            <nav class="text-sm text-gray-500 mb-4" aria-label="Breadcrumb">
+            <nav class="text-sm text-gray-500 my-2 ml-2" aria-label="Breadcrumb">
                 <ol class="list-reset flex">
                     <li><a href="{{ route('dashboard') }}" class="text-indigo-600 hover:text-indigo-800">Dashboard</a></li>
                     <li><span class="mx-2">/</span></li>
@@ -11,26 +11,37 @@
                 </ol>
             </nav>
 
-            <div class="bg-white shadow rounded-lg p-6">
+            <div class="bg-white md:shadow-md md:rounded-md mf:p-6 px-3 py-6">
                 <div class="flex justify-between items-center mb-4">
-                    <h2 class="text-xl font-semibold text-gray-800">Lista de Benefícios Entregues</h2>
+                    <h2 class="md:text-xl font-semibold text-gray-800">Benefícios Entregues</h2>
                     <a href="{{ route('benefit-deliveries.create') }}" class="bg-indigo-500 hover:bg-indigo-600 text-white px-4 py-2 rounded-md">Novo registro</a>
                 </div>
                 <div class="overflow-x-auto">
                     <table class="min-w-full table-auto md:table-fixed divide-y divide-gray-200">
                         <thead class="bg-gray-50">
                         <tr>
+                            <th class="py-3 px-6 text-left">Selfie</th>
                             <th class="py-3 px-6 text-left">Nome</th>
                             <th class="py-3 px-6 text-left">CPF</th>
                             <th class="py-3 px-6 text-left">Telefone</th>
                             <th class="py-3 px-6 text-left">Benefício</th>
-                            <th class="py-3 px-6 text-left">Selfie</th>
                             <th class="py-3 px-6 text-left">Ações</th>
                         </tr>
                         </thead>
                         <tbody>
                         @foreach($benefitDeliveries as $benefitDelivery)
                             <tr class="border-b hover:bg-gray-50">
+                                <td class="py-4 md:px-6 cursor-pointer">
+                                    @if($benefitDelivery->person->selfie_path)
+                                        <img src="{{ $benefitDelivery->person->thumb_url }}"
+                                             alt="Selfie"
+                                             loading="lazy"
+                                             class="w-16 h-16 rounded-full object-cover mx-auto"
+                                             onclick="openModal('{{ $benefitDelivery->id }}')">
+                                    @else
+                                        <span class="text-gray-500">Sem selfie</span>
+                                    @endif
+                                </td>
                                 <td class="py-4 px-6 whitespace-nowrap max-w-[150px] truncate">
                                     {{ $benefitDelivery->person->name }}
                                 </td>
@@ -42,17 +53,6 @@
                                 </td>
                                 <td class="py-4 px-6 whitespace-nowrap max-w-[150px] truncate">
                                     {{ $benefitDelivery->benefit->name }}
-                                </td>
-                                <td class="py-4 pr-6 text-center cursor-pointer">
-                                    @if($benefitDelivery->person->selfie_path)
-                                        <img src="{{ $benefitDelivery->person->thumb_url }}"
-                                             alt="Selfie"
-                                             loading="lazy"
-                                             class="w-16 h-16 rounded-full object-cover mx-auto"
-                                             onclick="openModal('{{ $benefitDelivery->id }}')">
-                                    @else
-                                        <span class="text-gray-500">Sem selfie</span>
-                                    @endif
                                 </td>
                                 <td class="py-4 px-6">
                                     <div class="flex items-center space-x-3">

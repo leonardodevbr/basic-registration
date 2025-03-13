@@ -24,6 +24,6 @@ jobs:
           USERNAME: ${{ secrets.USERNAME }}
           DIRECTORY: ${{ secrets.DIRECTORY }}
         run: |
-          rsync -avz \
+          rsync -avz --delete \
             -e "ssh -o StrictHostKeyChecking=no" \
             ./ $USERNAME@$HOST:$DIRECTORY

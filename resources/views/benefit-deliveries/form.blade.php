@@ -8,7 +8,7 @@
     </div>
 @endif
 
-<div class="w-full mx-auto bg-white rounded-lg">
+<div class="w-full mx-auto bg-white rounded-lg pb-6">
     <form id="benefit-delivery-register-form" action="{{ $action }}" class="grid grid-cols-1 md:grid-cols-2 gap-4"
           method="POST">
         @csrf
@@ -27,22 +27,24 @@
                     <video id="video" class="border rounded w-full" autoplay></video>
                     <canvas id="canvas"></canvas>
                 </div>
-
                 <img id="selfie-preview" class="border rounded w-full mt-2 {{ $selfieValue ? '' : 'hidden' }}"
                      src="{{ $selfieValue }}" alt="Selfie">
 
                 <input type="hidden" name="person[selfie]" id="selfie" value="{{ $selfieValue }}">
 
-                <div class="flex mt-2 space-x-2">
-                    <button type="button" id="flip-btn" class="px-4 py-2 bg-gray-500 text-white rounded w-full">
-                        Inverter
+                <div class="flex mt-2">
+                    <button type="button" id="flip-btn" class="px-4 mr-2 py-2 bg-gray-500 text-white rounded w-full {{ $selfieValue ? 'hidden' : '' }}">
+                        Espelhar
                     </button>
-                    <button type="button" id="capture-btn" class="px-4 py-2 bg-blue-500 text-white rounded w-full">
-                        {{ $selfieValue ? 'Capturar Novamente' : 'Tirar Selfie' }}
+                    <button type="button" id="capture-btn" class="px-4 mr-2 py-2 bg-blue-500 text-white rounded w-full {{ $selfieValue ? 'hidden' : '' }}">
+                        Tirar Selfie
                     </button>
                     <button type="button" id="cancel-btn"
                             class="px-4 py-2 bg-red-500 text-white rounded w-full {{ $selfieValue ? '' : 'hidden' }}">
                         Cancelar
+                    </button>
+                    <button type="button" id="switch-camera-btn" class="bg-gray-200/80 px-4 py-2 ml-2 rounded">
+                        <img src="{{asset('flip-cam.svg')}}" alt="Trocar câmera" style="max-width:none; width: 32px; height: 32px;">
                     </button>
                 </div>
             </div>
@@ -92,15 +94,16 @@
 @if(!$isEditing)
     <!-- Modal de Busca -->
     <div id="searchModal" class="fixed inset-0 flex items-center justify-center bg-gray-900 bg-opacity-50">
-        <div class="bg-white p-6 rounded-lg shadow-lg w-96">
+        <div class="bg-white lg:p-6 px-3 py-4 rounded-lg shadow-lg w-96">
             <h2 class="text-lg font-semibold mb-4">Buscar Pessoa</h2>
 
             <label class="block mb-2">Digite o CPF ou Nome:</label>
-            <input type="text" id="searchInput" class="border rounded w-full p-2" placeholder="Digite o CPF ou Nome">
+            <input type="text" id="searchInput" autocomplete="off" class="border rounded w-full p-2" placeholder="Digite o CPF ou Nome">
+            <div id="search-error" class="text-red-500 text-sm mt-2 hidden"></div>
 
-            <div class="flex justify-end mt-4">
+            <div class="flex justify-between mt-4">
+                <button id="closeSearchModal" class="px-4 py-2 bg-gray-500 text-white rounded">Cancelar</button>
                 <button id="searchBtn" class="px-4 py-2 bg-blue-500 text-white rounded">Buscar</button>
-                <button id="closeSearchModal" class="px-4 py-2 bg-gray-500 text-white rounded ml-2">Cancelar</button>
             </div>
 
             <!-- Container da Tabela com Scroll -->
@@ -130,22 +133,22 @@
             const searchInput = document.getElementById("searchInput");
             const searchBtn = document.getElementById("searchBtn");
             const closeSearchModal = document.getElementById("closeSearchModal");
-            const resultContainer = document.getElementById("resultContainer");
-            const resultTable = document.getElementById("resultTable");
             const cpfInput = document.querySelector("input[name='person[cpf]']");
             const nomeInput = document.querySelector("input[name='person[name]']");
             const telefoneInput = document.querySelector("input[name='person[phone]']");
             const form = document.getElementById("benefit-delivery-register-form");
             const loadingOverlay = document.getElementById("loading-overlay");
+            const searchError = document.getElementById("search-error");
 
 
             // Exibir modal apenas se for novo registro
             if (!isEditing) {
                 searchModal.classList.remove("hidden");
+                searchInput.focus();
             }
 
             // Aplica máscara no CPF ao digitar
-            searchInput.addEventListener("input", function () {
+            searchInput?.addEventListener("input", function () {
                 let value = searchInput.value;
 
                 // Verifica se o primeiro caractere digitado é um número (indica CPF)
@@ -166,18 +169,56 @@
                 searchInput.value = value; // Atualiza o campo
             });
 
+            searchInput?.addEventListener("keypress", async function (e) {
+                if (e.key === "Enter") {
+                    e.preventDefault(); // Evita o comportamento padrão (como submeter o formulário)
+                    const filtro = searchInput.value.trim();
+
+                    // Se o filtro tiver menos de 3 caracteres, mostra a mensagem de erro
+                    if (filtro.length < 3) {
+                        searchError.textContent = "Digite pelo menos 3 caracteres para a busca.";
+                        searchError.classList.remove("hidden");
+                        return;
+                    } else {
+                        // Se já estiver visível, oculta a mensagem ao digitar o suficiente
+                        searchError.classList.add("hidden");
+                    }
+
+                    loadingOverlay.classList.remove("hidden"); // Exibe overlay de loading
+                    await buscarPessoa(filtro);
+                }
+            });
+
 
             // Botão para buscar pessoa
-            searchBtn.addEventListener("click", async function () {
+            searchBtn?.addEventListener("click", async function () {
                 const filtro = searchInput.value.trim();
 
                 if (filtro.length < 3) {
-                    alert("Digite pelo menos 3 caracteres para a busca.");
+                    searchError.textContent = "Digite pelo menos 3 caracteres para a busca.";
+                    searchError.classList.remove("hidden");
                     return;
+                } else {
+                    // Se já estiver visível, oculta a mensagem ao digitar o suficiente
+                    searchError.classList.add("hidden");
                 }
 
                 loadingOverlay.classList.remove("hidden"); // Exibe overlay de loading
                 await buscarPessoa(filtro);
+            });
+
+            searchInput?.addEventListener("keypress", async function (e){
+                if(e.code == ENTER){
+                    const filtro = searchInput.value.trim();
+
+                    if (filtro.length < 3) {
+                        alert("Digite pelo menos 3 caracteres para a busca.");
+                        return;
+                    }
+
+                    loadingOverlay.classList.remove("hidden"); // Exibe overlay de loading
+                    await buscarPessoa(filtro);
+                }
             });
 
             // Fechar modal e exibir formulário sem preenchimento
@@ -198,7 +239,7 @@
                     ? `cpf=${filtro}`
                     : `nome=${encodeURIComponent(filtro)}`;
 
-                fetch(`{{env('SIGSVA_API_BASE_URL')}}/pessoas?${queryParam}`, {
+                fetch(`{{env('SIGVSA_API_BASE_URL')}}/pessoas?${queryParam}`, {
                     method: "GET",
                     headers: {
                         "Authorization": `Bearer ${token}`,
@@ -262,7 +303,7 @@
                     <span class="text-sm text-gray-500">${pessoa.cpf}</span>
                 </td>
                 <td class="border border-gray-300 p-2 text-center">
-                    <button class="select-btn bg-green-500 text-white px-2 py-1 text-xs rounded" data-id="${pessoa.cpf}">
+                    <button class="select-btn bg-[cadetblue] text-white px-2 py-1 text-xs rounded" data-id="${pessoa.cpf}">
                         Selecionar
                     </button>
                 </td>
