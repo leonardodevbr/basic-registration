@@ -29,53 +29,77 @@ class BenefitDeliveryController extends Controller
     {
         $validated = $request->validated();
 
-        // Decodifica a selfie Base64 corretamente
+        // Decode the base64 selfie image
         $imageData = base64_decode(str_replace('data:image/png;base64,', '', $validated['person']['selfie']));
 
-        // Criar nomes únicos
+        // Create unique file names
         $selfieName = 'selfies/' . uniqid() . '.png';
-        $thumbName = 'selfies/thumbs/' . uniqid() . '.png';
+        $thumbName  = 'selfies/thumbs/' . uniqid() . '.png';
 
-        // Criar as imagens com Intervention
         $manager = new ImageManager(new Driver());
 
-        // Criar a imagem completa
+        // Process full image
         $imageFull = $manager->read($imageData)
-            ->cover(500, 500) // Recorte quadrado centralizado
+            ->cover(500, 500)
             ->encode();
 
-        // Criar a miniatura quadrada sem distorção
+        // Process thumbnail
         $imageThumb = $manager->read($imageData)
-            ->cover(150, 150) // Mantém proporção e corta centralizado
+            ->cover(150, 150)
             ->encode();
 
-        // Inicializa o Google Cloud Storage
+        // Initialize Google Cloud Storage
         $storage = new StorageClient(['keyFilePath' => env('GOOGLE_CLOUD_KEY_FILE_PATH')]);
         $bucket = $storage->bucket(env('GOOGLE_CLOUD_STORAGE_BUCKET'));
 
-        // Upload da imagem grande
+        // Upload images
         $bucket->upload($imageFull, ['name' => $selfieName]);
-
-        // Upload da thumbnail
         $bucket->upload($imageThumb, ['name' => $thumbName]);
 
-        // Criar o registro no banco
+        // Create Person record
         $person = Person::create([
-            'name' => $validated['person']['name'],
-            'cpf' => $validated['person']['cpf'],
-            'phone' => $validated['person']['phone'] ?? null,
+            'name'        => $validated['person']['name'],
+            'cpf'         => $validated['person']['cpf'],
+            'phone'       => $validated['person']['phone'] ?? null,
             'selfie_path' => $selfieName,
-            'thumb_path' => $thumbName
+            'thumb_path'  => $thumbName,
         ]);
 
-        BenefitDelivery::create([
-            'benefit_id' => $validated['benefit_id'],
-            'person_id' => $person->id,
-            'delivered_at' => now()
+        // Generate a 6-digit password code
+        $passwordCode = random_int(100000, 999999);
+
+        // Define validity period (e.g., 1 hour from now)
+        $validUntil = now()->addHour();
+
+        // Create BenefitDelivery record with new columns
+        $benefitDelivery = BenefitDelivery::create([
+            'benefit_id'    => $validated['benefit_id'],
+            'person_id'     => $person->id,
+            'password_code' => $passwordCode,
+            'valid_until'   => $validUntil,
+            'status'        => 'PENDING',
+            'registered_by' => auth()->check() ? auth()->user()->id : null,
+            'delivered_at'  => null,
+            'unit_id'       => $validated['unit_id'] ?? null,
         ]);
 
-        return redirect()->route('benefit-deliveries.index')->with('success', 'Registro de entrega realizado com sucesso!');
+        // Return JSON response for AJAX request
+        if ($request->expectsJson()) {
+            return response()->json([
+                'success' => true,
+                'message' => 'Benefit delivery registered successfully!',
+                'data'    => [
+                    'benefit_delivery' => $benefitDelivery,
+                    'person' => $person,
+                    'password_code' => $passwordCode
+                ],
+            ]);
+        }
+
+        return redirect()->route('benefit-deliveries.index')
+            ->with('success', 'Benefit delivery registered successfully!');
     }
+
 
     public function edit(BenefitDelivery $benefitDelivery)
     {

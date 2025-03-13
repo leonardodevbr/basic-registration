@@ -9,14 +9,17 @@
 @endif
 
 <div class="w-full mx-auto bg-white rounded-lg pb-6">
+    <!-- Error container for AJAX errors -->
+    <div id="ajax-error" class="mb-4 p-4 bg-red-100 text-red-700 rounded hidden"></div>
+
     <form id="benefit-delivery-register-form" action="{{ $action }}" class="grid grid-cols-1 md:grid-cols-2 gap-4"
           method="POST">
         @csrf
         @method($method)
+        <!-- (Rest of the form remains unchanged) -->
         <div class="flex flex-col">
             <div class="mb-4">
                 <label class="block">Selfie:</label>
-
                 @php
                     $selfieValue = old('person.selfie', $benefitDelivery->person->selfie_url ?? null);
                 @endphp
@@ -44,7 +47,7 @@
                         Cancelar
                     </button>
                     <button type="button" id="switch-camera-btn" class="bg-gray-200/80 px-4 py-2 ml-2 rounded">
-                        <img src="{{asset('flip-cam.svg')}}" alt="Trocar câmera" style="max-width:none; width: 32px; height: 32px;">
+                        <img src="{{ asset('flip-cam.svg') }}" alt="Trocar câmera" style="max-width:none; width: 32px; height: 32px;">
                     </button>
                 </div>
             </div>
@@ -72,26 +75,28 @@
                 <label class="block">Benefício:</label>
                 <select name="benefit_id" class="border rounded w-full p-2">
                     @foreach($benefits as $benefit)
-                        <option
-                            value="{{ $benefit->id }}" {{ old('benefit_id', $benefitDelivery->benefit_id ?? '') == $benefit->id ? 'selected' : '' }}>
+                        <option value="{{ $benefit->id }}" {{ old('benefit_id', $benefitDelivery->benefit_id ?? '') == $benefit->id ? 'selected' : '' }}>
                             {{ $benefit->name }}
                         </option>
                     @endforeach
                 </select>
             </div>
 
-            <button type="submit" class="w-full px-4 py-2 bg-indigo-500 text-white rounded">Salvar</button>
-            <a class="w-full px-4 py-2 bg-gray-500 text-white rounded text-center mt-2"
-               href="{{route('benefit-deliveries.index')}}">Voltar</a>
+            <!-- (Opcional) Campo unit_id se necessário -->
+            <button type="submit" id="save-btn" class="w-full px-4 py-2 bg-indigo-500 text-white rounded">Salvar</button>
+            <a class="w-full px-4 py-2 bg-gray-500 text-white rounded text-center mt-2" href="{{ route('benefit-deliveries.index') }}">
+                Voltar
+            </a>
         </div>
     </form>
 </div>
+
 
 @php
     $isEditing = isset($benefitDelivery) && $benefitDelivery->exists;
 @endphp
 
-@if(!$isEditing)
+@if(!$isEditing && !$errors->any())
     <!-- Modal de Busca -->
     <div id="searchModal" class="fixed inset-0 flex items-center justify-center bg-gray-900 bg-opacity-50">
         <div class="bg-white lg:p-6 px-3 py-4 rounded-lg shadow-lg w-96">
@@ -128,6 +133,8 @@
 @push('scripts')
     <script>
         document.addEventListener("DOMContentLoaded", function () {
+            const form = document.getElementById('benefit-delivery-register-form');
+            const ajaxError = document.getElementById('ajax-error');
             const isEditing = @json($isEditing);
             const searchModal = document.getElementById("searchModal");
             const searchInput = document.getElementById("searchInput");
@@ -136,9 +143,9 @@
             const cpfInput = document.querySelector("input[name='person[cpf]']");
             const nomeInput = document.querySelector("input[name='person[name]']");
             const telefoneInput = document.querySelector("input[name='person[phone]']");
-            const form = document.getElementById("benefit-delivery-register-form");
             const loadingOverlay = document.getElementById("loading-overlay");
             const searchError = document.getElementById("search-error");
+            const submitBtn = document.getElementById("save-btn");
 
 
             // Exibir modal apenas se for novo registro
@@ -397,8 +404,103 @@
             }
 
             if (form) {
-                form.addEventListener("submit", function () {
-                    loadingOverlay.classList.remove("hidden"); // Exibe o loading
+                form.addEventListener('submit', async function (e) {
+                    e.preventDefault();
+
+                    // Desabilita o botão e altera o texto
+                    submitBtn.disabled = true;
+                    const originalBtnText = submitBtn.innerText;
+                    submitBtn.innerText = 'Enviando...';
+
+                    // Exibe um alerta de carregamento (SweetAlert)
+                    Swal.fire({
+                        title: 'Enviando...',
+                        text: 'Por favor, aguarde.',
+                        allowOutsideClick: false,
+                        allowEscapeKey: false,
+                        didOpen: () => {
+                            Swal.showLoading();
+                        }
+                    });
+
+                    try {
+                        const formData = new FormData(form);
+                        const response = await fetch(form.action, {
+                            method: form.method,
+                            headers: {
+                                'Accept': 'application/json'
+                            },
+                            body: formData
+                        });
+
+                        const responseData = await response.json();
+
+                        // Fecha o loading antes de exibir a mensagem final
+                        Swal.close();
+
+                        if (!response.ok) {
+                            // Reabilita o botão
+                            submitBtn.disabled = false;
+                            submitBtn.innerText = originalBtnText;
+
+                            // Se houver erros de validação, exibe com Swal
+                            let errorHtml = '<ul>';
+                            if (responseData.errors) {
+                                Object.values(responseData.errors).forEach(errors => {
+                                    errors.forEach(msg => {
+                                        errorHtml += `<li>${msg}</li>`;
+                                    });
+                                });
+                                errorHtml += '</ul>';
+                            } else {
+                                errorHtml = `<p>${responseData.message || 'Ocorreu um erro.'}</p>`;
+                            }
+
+                            Swal.fire({
+                                icon: 'error',
+                                title: 'Erro de Validação',
+                                html: errorHtml,
+                                confirmButtonText: 'OK'
+                            });
+                        } else {
+                            // Em caso de sucesso, exibe a senha em destaque
+                            const person = responseData.data.person;
+                            const passwordCode = responseData.data.password_code;
+
+                            Swal.fire({
+                                icon: 'success',
+                                title: 'Registro Efetuado!',
+                                html: `
+                        <p><strong>Senha:</strong>
+                           <span style="font-size: 1.5rem; color: #D35400;">
+                              ${passwordCode}
+                           </span>
+                        </p>
+                        <p><strong>Nome:</strong> ${person.name}</p>
+                        <p><strong>CPF:</strong> ${person.cpf}</p>
+                        ${ person.phone ? `<p><strong>Telefone:</strong> ${person.phone}</p>` : '' }
+                    `,
+                                confirmButtonText: 'OK'
+                            }).then((result) => {
+                                if (result.isConfirmed) {
+                                    window.location.href = "{{ route('benefit-deliveries.index') }}";
+                                }
+                            });
+                        }
+                    } catch (error) {
+                        // Fecha o loading e reabilita o botão
+                        Swal.close();
+                        submitBtn.disabled = false;
+                        submitBtn.innerText = originalBtnText;
+
+                        console.error('Erro ao enviar formulário:', error);
+                        Swal.fire({
+                            icon: 'error',
+                            title: 'Erro Inesperado',
+                            text: 'Ocorreu um erro inesperado. Tente novamente mais tarde.',
+                            confirmButtonText: 'OK'
+                        });
+                    }
                 });
             }
         });

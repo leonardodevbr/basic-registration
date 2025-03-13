@@ -6,8 +6,11 @@
 
 namespace App\Models\Base;
 
+use App\Models\BenefitDelivery;
 use Carbon\Carbon;
+use Illuminate\Database\Eloquent\Collection;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
+use Illuminate\Database\Eloquent\Relations\HasMany;
 
 /**
  * Class User
@@ -20,6 +23,8 @@ use Illuminate\Database\Eloquent\Factories\HasFactory;
  * @property string|null $remember_token
  * @property Carbon|null $created_at
  * @property Carbon|null $updated_at
+ * 
+ * @property Collection|BenefitDelivery[] $benefit_deliveries
  *
  * @package App\Models\Base
  */
@@ -44,4 +49,9 @@ class User extends \Illuminate\Foundation\Auth\User
 		'password',
 		'remember_token'
 	];
+
+	public function benefit_deliveries(): HasMany
+	{
+		return $this->hasMany(BenefitDelivery::class, 'registered_by');
+	}
 }
