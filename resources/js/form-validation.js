@@ -1,13 +1,13 @@
 document.addEventListener("DOMContentLoaded", () => {
     // CPF
-    document.querySelectorAll('input[name="cpf"]').forEach(input => {
+    document.querySelectorAll('input[name="person[cpf]"]').forEach(input => {
         IMask(input, {
             mask: '000.000.000-00'
         });
     });
 
     // Telefone
-    document.querySelectorAll('input[name="phone"]').forEach(input => {
+    document.querySelectorAll('input[name="person[phone]"]').forEach(input => {
         IMask(input, {
             mask: '(00) 00000-0000'
         });

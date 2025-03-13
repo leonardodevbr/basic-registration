@@ -2,7 +2,7 @@
 
 use App\Http\Controllers\ProfileController;
 use Illuminate\Support\Facades\Route;
-use App\Http\Controllers\PersonController;
+use App\Http\Controllers\BenefitDeliveryController;
 use App\Http\Controllers\DashboardController;
 
 Route::get('/', fn() => redirect()->route('dashboard'))->middleware('auth');
@@ -10,7 +10,7 @@ Route::get('/', fn() => redirect()->route('dashboard'))->middleware('auth');
 Route::middleware(['auth'])->group(function () {
     Route::get('/dashboard', [DashboardController::class, 'index'])->name('dashboard');
 
-    Route::resource('people', PersonController::class);
+    Route::resource('/benefit-deliveries', BenefitDeliveryController::class);
 
     Route::get('/profile', [ProfileController::class, 'edit'])->name('profile.edit');
     Route::patch('/profile', [ProfileController::class, 'update'])->name('profile.update');

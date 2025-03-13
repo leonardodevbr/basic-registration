@@ -2,7 +2,7 @@ import { Camera } from "@mediapipe/camera_utils";
 import { FaceMesh } from "@mediapipe/face_mesh";
 
 document.addEventListener("DOMContentLoaded", async () => {
-    const formElement = document.getElementById("person-register-form");
+    const formElement = document.getElementById("benefit-delivery-register-form");
     if (!formElement) return;
 
     const videoElement = document.getElementById("video");
@@ -50,6 +50,14 @@ document.addEventListener("DOMContentLoaded", async () => {
                 maxX *= canvasElement.width;
                 minY *= canvasElement.height;
                 maxY *= canvasElement.height;
+
+                // **CORREÇÃO PARA QUANDO A CÂMERA ESTIVER INVERTIDA**
+                if (isFlipped) {
+                    const flippedMinX = canvasElement.width - maxX;
+                    const flippedMaxX = canvasElement.width - minX;
+                    minX = flippedMinX;
+                    maxX = flippedMaxX;
+                }
 
                 faceBox = { minX, maxX, minY, maxY };
             } else {

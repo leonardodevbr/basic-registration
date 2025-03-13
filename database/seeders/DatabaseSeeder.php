@@ -4,6 +4,7 @@ namespace Database\Seeders;
 
 use App\Models\Unit;
 use App\Models\User;
+use App\Models\Benefit;
 use Illuminate\Database\Seeder;
 
 class DatabaseSeeder extends Seeder
@@ -20,5 +21,6 @@ class DatabaseSeeder extends Seeder
         ]);
 
         Unit::create(['name' => 'CRAS Cafarnaum', 'city' => 'Cafarnaum-BA']);
+        Benefit::create(['name' => 'Peixe Solidário', 'description' => 'Entrega de peixes na semana santa']);
     }
 }

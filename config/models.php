@@ -69,8 +69,6 @@ return [
 
         'use' => [
             Illuminate\Database\Eloquent\Factories\HasFactory::class
-            // Reliese\Database\Eloquent\BitBooleans::class,
-            // Reliese\Database\Eloquent\BlamableBehavior::class,
         ],
 
         /*
@@ -171,7 +169,7 @@ return [
         |
         */
 
-        'base_files' => false,
+        'base_files' => true,
 
         /*
         |--------------------------------------------------------------------------
@@ -289,6 +287,11 @@ return [
             'password_resets',
             'personal_access_tokens',
             'password_reset_tokens',
+            'cache',
+            'cache_locks',
+            'jobs',
+            'job_batches',
+            'sessions'
         ],
 
         /*
@@ -442,7 +445,7 @@ return [
         | if you want the $hidden to be generated in base files
         |
         */
-        'hidden_in_base_files' => false,
+        'hidden_in_base_files' => true,
 
         /*
         |--------------------------------------------------------------------------
@@ -452,7 +455,7 @@ return [
         | if you want the $fillable to be generated in base files
         |
         */
-        'fillable_in_base_files' => false,
+        'fillable_in_base_files' => true,
 
         /*
         |--------------------------------------------------------------------------

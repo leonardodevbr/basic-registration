@@ -10,7 +10,7 @@
 
             <div class="bg-white shadow rounded-lg p-6">
                 <h2 class="text-2xl font-semibold text-gray-800 mb-4">Dashboard</h2>
-                <a href="{{ route('people.index') }}" class="px-4 py-2 bg-indigo-500 text-white rounded">Ver Lista de Pessoas</a>
+                <a href="{{ route('benefit-deliveries.index') }}" class="px-4 py-2 bg-indigo-500 text-white rounded">Ver registro de entregas</a>
 
                 <div class="mt-6">
                     <!-- Aqui futuramente vão os gráficos -->

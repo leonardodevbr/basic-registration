@@ -4,7 +4,7 @@
  * Created by Reliese Model.
  */
 
-namespace App\Models;
+namespace App\Models\Base;
 
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
@@ -20,7 +20,7 @@ use Illuminate\Database\Eloquent\Model;
  * @property int $available_at
  * @property int $created_at
  *
- * @package App\Models
+ * @package App\Models\Base
  */
 class Job extends Model
 {

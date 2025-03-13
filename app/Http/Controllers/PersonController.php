@@ -1,8 +1,8 @@
 <?php
 namespace App\Http\Controllers;
 
-use App\Http\Requests\PersonStoreRequest;
-use App\Http\Requests\PersonUpdateRequest;
+use App\Http\Requests\BenefitDeliveryStoreRequest;
+use App\Http\Requests\BenefitDeliveryUpdateRequest;
 use App\Models\Person;
 use Google\Cloud\Storage\StorageClient;
 use Intervention\Image\Drivers\Gd\Driver;
@@ -21,7 +21,7 @@ class PersonController extends Controller
         return view('people.create');
     }
 
-    public function store(PersonStoreRequest $request)
+    public function store(BenefitDeliveryStoreRequest $request)
     {
         $imageData = base64_decode(str_replace('data:image/png;base64,', '', $request->selfie));
 
@@ -68,7 +68,7 @@ class PersonController extends Controller
         return view('people.edit', compact('person'));
     }
 
-    public function update(PersonUpdateRequest $request, Person $person)
+    public function update(BenefitDeliveryUpdateRequest $request, Person $person)
     {
         $data = $request->validated();
 
