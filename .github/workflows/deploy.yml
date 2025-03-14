@@ -38,6 +38,6 @@ jobs:
             cd $DIRECTORY || exit 1
             php artisan down || true
             php artisan migrate:fresh --seed --force
-            php artisan db:seed --class=BenefitDeliverySeeder
+            php artisan db:seed --class=BenefitDeliverySeeder --force
             php artisan up
           EOF
