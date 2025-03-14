@@ -16,9 +16,12 @@
             <div class="bg-white md:shadow-md md:rounded-md mf:p-6 px-3 py-6">
                 <div class="flex justify-between items-center mb-4">
                     <h2 class="md:text-xl font-semibold text-gray-800">Benefícios Entregues</h2>
-                    <a href="{{ route('benefit-deliveries.create') }}"
-                       class="bg-indigo-500 hover:bg-indigo-600 text-center text-white ml-auto px-4 py-2 rounded">Novo
-                        registro</a>
+                    <div class="flex">
+                        <button onclick="openQuickDeliveryModal()" class="bg-orange-500 hover:bg-orange-600 text-center text-white ml-auto px-4 py-2 rounded">
+                            Entrega
+                        </button>
+                        <a href="{{ route('benefit-deliveries.create') }}" class="bg-blue-500 hover:bg-blue-600 text-center text-white ml-2 px-4 py-2 rounded">Novo</a>
+                    </div>
                 </div>
 
                 <form id="filter-form" class="flex items-start space-x-2 mb-2">
@@ -30,38 +33,62 @@
                     </button>
                 </form>
 
-                <div class="overflow-x-auto">
-                    <div id="table-container">
-                        @include('benefit-deliveries.partials.table', ['benefitDeliveries' => $benefitDeliveries])
-                    </div>
-                </div>
+                @include('benefit-deliveries.partials.table', ['benefitDeliveries' => $benefitDeliveries])
             </div>
         </div>
-
-        <!-- Botão Flutuante para Entrega Rápida -->
-        <button onclick="openQuickDeliveryModal()"
-                class="bg-indigo-500 hover:bg-indigo-600 text-white px-4 py-2 rounded shadow-lg fixed bottom-5 right-5">
-            Entrega Rápida
-        </button>
     </div>
 
     <!-- Modal de Entrega Rápida -->
-    <div id="quickDeliveryModal"
-         class="fixed inset-0 flex items-center justify-center bg-gray-900 bg-opacity-50 hidden">
-        <div class="bg-white p-6 rounded-lg relative w-96">
+    <div id="quickDeliveryModal" class="fixed inset-0 flex items-center justify-center bg-gray-900 bg-opacity-50 hidden">
+        <div class="bg-white p-6 rounded-lg shadow relative w-80 max-w-md">
             <button onclick="closeQuickDeliveryModal()" class="absolute top-2 right-2 text-gray-500 text-2xl">&times;
             </button>
             <h2 class="text-xl font-bold mb-4">Entrega Rápida</h2>
-            <input type="text" id="quickDeliveryCode" placeholder="Digite a senha (6 dígitos)"
-                   class="border rounded w-full p-2 mb-4" maxlength="6">
+            <input type="text" id="quickDeliveryCode" placeholder="Digite o código do ticket"
+                   class="border rounded w-full p-2 mb-4" maxlength="6" autocomplete="off">
             <button type="button" onclick="quickDelivery()"
-                    class="w-full bg-green-500 text-white px-4 py-2 rounded hover:bg-green-600">
+                    class="w-full bg-blue-500 text-white px-4 py-2 rounded hover:bg-blue-600">
                 Processar
             </button>
         </div>
     </div>
 
-    @push('scripts')
+    <!-- Modal de Detalhes -->
+    <div id="detailsModal" class="fixed inset-0 flex items-center justify-center bg-black bg-opacity-50 hidden">
+        <div class="bg-white p-6 rounded-lg shadow-lg relative w-80 max-w-md">
+            <div id="modal-content" class="text-center">
+                <!-- Placeholder da imagem -->
+                <div class="flex justify-center">
+                    <img id="modalImage" class="h-32 shadow rounded-full mx-auto mb-4 bg-gray-200" src="/placeholder.png" alt="Selfie">
+                </div>
+
+                <!-- Informações do beneficiário -->
+                <div class="flex flex-col items-center space-y-2">
+                    <p id="modalName" class="text-lg h-[28px] font-bold text-gray-900 bg-gray-200 min-w-[230px] px-4 rounded-md animate-pulse">
+                    </p>
+                    <p id="modalTicketCode" class="text-lg h-[32px] font-semibold text-blue-600 bg-gray-200 min-w-[100px] px-4 rounded-md animate-pulse">
+                    </p>
+                    <span id="modalStatus" class="text-xs h-[20px] font-medium px-3 rounded-full bg-gray-300 text-gray-800 animate-pulse min-w-[70px]">
+                    </span>
+                    <p id="modalCpf" class="text-sm h-[20px] text-gray-600 bg-gray-200 min-w-[120px] px-4 rounded-md animate-pulse">
+                    </p>
+                    <p id="modalPhone" class="text-sm h-[20px] text-gray-600 bg-gray-200 min-w-[140px] px-4 rounded-md animate-pulse">
+                    </p>
+                    <p id="modalBenefit" class="text-sm h-[20px] text-gray-600 bg-gray-200 min-w-[130px] px-4 rounded-md animate-pulse">
+                    </p>
+                </div>
+            </div>
+
+            <div class="mt-5 text-center">
+                <button onclick="closeModal()" class="text-sm bg-gray-500 text-white px-4 py-2 rounded hover:bg-gray-600">
+                    Fechar
+                </button>
+            </div>
+        </div>
+    </div>
+
+
+@push('scripts')
         <script>
             const filterInput = document.getElementById("filter");
             const filterForm = document.getElementById("filter-form");
@@ -70,20 +97,28 @@
             const urlParams = new URLSearchParams(window.location.search);
 
             function openModal(benefitDeliveryId) {
+                const modal = document.getElementById("detailsModal");
                 const modalImage = document.getElementById("modalImage");
-                const placeholder = "/placeholder.jpg";
-                const loadingOverlay = document.getElementById("loading-overlay");
+                const placeholder = "/placeholder.png";
 
-                // Exibe o loading na página
-                loadingOverlay.classList.remove("hidden");
-
-                // Define o placeholder antes de carregar a imagem real
+                // Exibir modal e resetar valores com placeholders
+                modal.classList.remove("hidden");
                 modalImage.src = placeholder;
+
+                // Adiciona a classe de animação para placeholders
+                const placeholders = [
+                    "modalName", "modalTicketCode", "modalCpf", "modalPhone", "modalBenefit", "modalStatus"
+                ];
+
+                placeholders.forEach(id => {
+                    const element = document.getElementById(id);
+                    element.innerText = "";
+                    element.classList.add("animate-pulse", "bg-gray-200");
+                });
 
                 fetch(`/benefit-deliveries/${benefitDeliveryId}`)
                     .then(response => response.json())
                     .then(data => {
-                        // Pre-carrega a imagem antes de substituir
                         const img = new Image();
                         img.src = data.person.selfie_url;
 
@@ -95,50 +130,99 @@
                             modalImage.src = placeholder;
                         };
 
-                        const cpfFormatado = formatCPF(data.person.cpf);
-                        const telefoneFormatado = formatPhone(data.person.phone ?? '');
+                        // Remove efeito de carregamento e atualiza os dados
+                        updateModalField("modalName", data.person.name);
+                        updateModalField("modalTicketCode", data.ticket_code, "text-blue-600 font-semibold");
+                        updateModalField("modalCpf", "<b>CPF:</b> " + formatCPF(data.person.cpf), "", true);
+                        updateModalField("modalPhone", "<b>Telefone:</b> " + formatPhone(data.person.phone ?? ''), "", true);
+                        updateModalField("modalBenefit", "<b>Benefício:</b> " + data.benefit.name, "", true);
 
-                        document.getElementById("modalTitle").innerText = data.person.name;
-                        document.getElementById("modalCpf").innerText = "CPF: " + cpfFormatado;
-                        document.getElementById("modalPhone").innerText = "Telefone: " + telefoneFormatado;
-                        document.getElementById("modalBenefit").innerText = "Benefício: " + data.benefit.name;
-                        document.getElementById("modalTicketCode").innerText = "Senha: " + data.ticket_code;
-                        document.getElementById("modalStatus").innerText = "Status: " + data.status;
-                        document.getElementById("imageModal").classList.remove("hidden");
+                        // 🔹 Resetando classes do status antes de adicionar novas 🔹
+                        const statusElement = document.getElementById("modalStatus");
+                        statusElement.className = "text-xs h-[20px] min-w-[70px] font-medium px-3 rounded-full"; // Reseta classes base
+                        statusElement.innerText = translateStatus(data.status);
+                        statusElement.classList.add(...getStatusBadge(data.status).split(" ")); // Adiciona as classes corretas
                     })
                     .catch(error => {
-                        console.error("Erro ao buscar selfie:", error);
-                        alert("Erro ao carregar a imagem. Tente novamente.");
-                        modalImage.src = placeholder;
-                    })
-                    .finally(() => {
-                        // Esconde o loading quando os dados estiverem carregados
-                        loadingOverlay.classList.add("hidden");
+                        console.error("Erro ao carregar os detalhes:", error);
+                        alert("Erro ao carregar os detalhes. Tente novamente.");
                     });
             }
 
+            // Atualiza os campos do modal removendo os placeholders
+            function updateModalField(id, text, extraClass = "", useHTML = false) {
+                const element = document.getElementById(id);
+                if (useHTML) {
+                    element.innerHTML = text; // Permite HTML dentro do elemento
+                } else {
+                    element.innerText = text; // Mantém apenas texto puro
+                }
+                element.classList.remove("animate-pulse", "bg-gray-200");
+                if (extraClass) element.classList.add(...extraClass.split(" "));
+            }
+
+            function closeModal() {
+                const modal = document.getElementById("detailsModal");
+                const modalImage = document.getElementById("modalImage");
+                const placeholder = "/placeholder.png";
+
+                // Esconde o modal
+                modal.classList.add("hidden");
+
+                // Resetando imagem para placeholder
+                modalImage.src = placeholder;
+
+                // Lista de elementos a serem resetados
+                const placeholders = [
+                    "modalName", "modalTicketCode", "modalCpf", "modalPhone", "modalBenefit", "modalStatus"
+                ];
+
+                placeholders.forEach(id => {
+                    const element = document.getElementById(id);
+                    element.innerText = "";
+                    element.className = "text-sm h-[20px] text-gray-600 bg-gray-200 min-w-[120px] px-4 rounded-md animate-pulse";
+                });
+
+                // 🔹 Resetando especificamente o status para evitar cor errada
+                const statusElement = document.getElementById("modalStatus");
+                statusElement.innerText = "";
+                statusElement.className = "text-xs h-[20px] min-w-[70px] font-medium px-3 rounded-full bg-gray-300 text-gray-800 animate-pulse";
+            }
+
+
+            // Formatar CPF
             function formatCPF(cpf) {
-                // Remove qualquer caractere que não seja dígito
-                cpf = cpf.replace(/\D/g, '');
-                // Aplica a máscara 000.000.000-00
                 return cpf.replace(/^(\d{3})(\d{3})(\d{3})(\d{2})$/, "$1.$2.$3-$4");
             }
 
+            // Formatar telefone
             function formatPhone(phone) {
-                // Remove qualquer caractere que não seja dígito
                 phone = phone.replace(/\D/g, '');
+                return phone.length === 11
+                    ? phone.replace(/^(\d{2})(\d{5})(\d{4})$/, "($1) $2-$3")
+                    : phone.replace(/^(\d{2})(\d{4})(\d{4})$/, "($1) $2-$3");
+            }
 
-                // Se tiver 11 dígitos (ex.: 61999999999), formata como (61) 99999-9999
-                if (phone.length === 11) {
-                    return phone.replace(/^(\d{2})(\d{5})(\d{4})$/, "($1) $2-$3");
-                }
-                // Se tiver 10 dígitos (ex.: 6139999999), formata como (61) 3999-9999
-                else if (phone.length === 10) {
-                    return phone.replace(/^(\d{2})(\d{4})(\d{4})$/, "($1) $2-$3");
-                }
+            // Traduzir status
+            function translateStatus(status) {
+                const statuses = {
+                    "PENDING": "Pendente",
+                    "DELIVERED": "Entregue",
+                    "EXPIRED": "Expirado",
+                    "REISSUED": "Reemitido"
+                };
+                return statuses[status] || status;
+            }
 
-                // Caso não atenda ao padrão esperado, retorna o valor sem formatação
-                return phone;
+            // Definir classe de badge conforme o status
+            function getStatusBadge(status) {
+                const badges = {
+                    "PENDING": "bg-blue-100 text-blue-800",
+                    "DELIVERED": "bg-green-100 text-green-800",
+                    "EXPIRED": "bg-red-100 text-red-800",
+                    "REISSUED": "bg-gray-200 text-gray-800"
+                };
+                return badges[status] || "bg-gray-300 text-gray-800";
             }
 
             function confirmDelivery(deliveryId) {
@@ -373,42 +457,18 @@
 
             function attachPaginationEvents() {
                 document.querySelectorAll("#pagination-links a").forEach(link => {
-                    link.addEventListener("click", async function (e) {
-                        e.preventDefault(); // Impede o comportamento padrão
+                    link.addEventListener("click", function(e) {
+                        e.preventDefault();
+                        let newUrl = this.href;
+                        history.pushState(null, '', newUrl); // Atualiza a URL no navegador
 
-                        let requestUrl = this.href; // Obtém o link correto da página
-
-                        try {
-                            const response = await fetch(requestUrl, { headers: { 'Accept': 'application/json' } });
-
-                            if (!response.ok) {
-                                throw new Error(`Erro na requisição: ${response.status} - ${response.statusText}`);
-                            }
-
-                            const data = await response.json();
-
-                            if (data.success) {
-                                document.getElementById('deliveries-table-body').innerHTML = data.html;
-                                document.getElementById('pagination-links').innerHTML = data.pagination; // Usa a paginação custom
-
-                                attachPaginationEvents(); // Reanexar eventos da paginação
-                                attachDeleteEvents(); // Reanexar eventos de exclusão
-                            } else {
-                                Swal.fire({
-                                    icon: 'error',
-                                    title: 'Erro',
-                                    text: data.message || 'Falha ao carregar a nova página.'
-                                });
-                            }
-                        } catch (error) {
-                            console.error("Erro ao carregar página:", error);
-                            Swal.fire({
-                                icon: 'error',
-                                title: 'Erro',
-                                text: 'Não foi possível carregar a nova página. Tente novamente.',
-                                confirmButtonText: 'OK'
-                            });
-                        }
+                        fetch(newUrl, { headers: { 'X-Requested-With': 'XMLHttpRequest' } })
+                            .then(response => response.text())
+                            .then(html => {
+                                tableContainer.innerHTML = html;
+                                attachPaginationEvents(); // Reanexar eventos após o carregamento
+                            })
+                            .catch(error => console.error('Erro ao carregar a página:', error));
                     });
                 });
             }
@@ -471,6 +531,27 @@
                 }
             }
 
+            function toggleDropdown(button) {
+                console.log(3);
+                const dropdown = button.nextElementSibling;
+                dropdown.classList.toggle("hidden");
+
+                // Fecha qualquer outro dropdown aberto
+                document.querySelectorAll(".dropdown-actions").forEach(el => {
+                    if (el !== dropdown) {
+                        el.classList.add("hidden");
+                    }
+                });
+
+                // Fecha ao clicar fora
+                document.addEventListener("click", function closeDropdown(event) {
+                    if (!button.contains(event.target) && !dropdown.contains(event.target)) {
+                        dropdown.classList.add("hidden");
+                        document.removeEventListener("click", closeDropdown);
+                    }
+                });
+            }
+
             // ** Garante que os eventos são reanexados após cada atualização da tabela **
             document.addEventListener("DOMContentLoaded", function () {
                 if (urlParams.has('filter')) {
@@ -499,6 +580,35 @@
                         e.preventDefault();
                         quickDelivery();
                     }
+                });
+
+                document.querySelectorAll("tr").forEach(row => {
+                    let pressTimer;
+
+                    row.addEventListener("mousedown", function (e) {
+                        const dropdownButton = row.querySelector(".dropdown-button");
+
+                        // Se o clique foi diretamente no botão, ignora o press longo
+                        if (e.target.classList.contains("dropdown-button")) {
+                            toggleDropdown(dropdownButton);
+                            return;
+                        }
+
+                        // Inicia o temporizador para detectar um press longo
+                        pressTimer = setTimeout(() => {
+                            if (dropdownButton) {
+                                toggleDropdown(dropdownButton);
+                            }
+                        }, 300); // Tempo de pressão longa
+                    });
+
+                    row.addEventListener("mouseup", function () {
+                        clearTimeout(pressTimer);
+                    });
+
+                    row.addEventListener("mouseleave", function () {
+                        clearTimeout(pressTimer);
+                    });
                 });
 
                 attachFilterEvents(); // Chamar a função ao carregar a página

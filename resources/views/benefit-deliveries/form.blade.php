@@ -213,20 +213,6 @@
                 await buscarPessoa(filtro);
             });
 
-            searchInput?.addEventListener("keypress", async function (e){
-                if(e.code == ENTER){
-                    const filtro = searchInput.value.trim();
-
-                    if (filtro.length < 3) {
-                        alert("Digite pelo menos 3 caracteres para a busca.");
-                        return;
-                    }
-
-                    loadingOverlay.classList.remove("hidden"); // Exibe overlay de loading
-                    await buscarPessoa(filtro);
-                }
-            });
-
             // Fechar modal e exibir formulário sem preenchimento
             if (closeSearchModal) {
                 closeSearchModal.addEventListener("click", function () {
@@ -376,6 +362,41 @@
                 telefoneInput.value = pessoa.telefone || "";
             }
 
+            // Formatar CPF
+            function formatCPF(cpf) {
+                return cpf.replace(/^(\d{3})(\d{3})(\d{3})(\d{2})$/, "$1.$2.$3-$4");
+            }
+
+            // Formatar telefone
+            function formatPhone(phone) {
+                phone = phone.replace(/\D/g, '');
+                return phone.length === 11
+                    ? phone.replace(/^(\d{2})(\d{5})(\d{4})$/, "($1) $2-$3")
+                    : phone.replace(/^(\d{2})(\d{4})(\d{4})$/, "($1) $2-$3");
+            }
+
+            // Traduzir status
+            function translateStatus(status) {
+                const statuses = {
+                    "PENDING": "Pendente",
+                    "DELIVERED": "Entregue",
+                    "EXPIRED": "Expirado",
+                    "REISSUED": "Reemitido"
+                };
+                return statuses[status] || status;
+            }
+
+            // Definir classe de badge conforme o status
+            function getStatusBadge(status) {
+                const badges = {
+                    "PENDING": "bg-blue-100 text-blue-800",
+                    "DELIVERED": "bg-green-100 text-green-800",
+                    "EXPIRED": "bg-red-100 text-red-800",
+                    "REISSUED": "bg-gray-200 text-gray-800"
+                };
+                return badges[status] || "bg-gray-300 text-gray-800";
+            }
+
             async function obterToken() {
                 let token = localStorage.getItem("auth_token");
 
@@ -424,6 +445,17 @@
 
                     try {
                         const formData = new FormData(form);
+                        const selfieInput = form.querySelector('input[name="person[selfie]"]');
+
+                        if (selfieInput) {
+                            const currentSelfie = selfieInput.value.trim();
+
+                            // Se o valor não começar com "data:image/" (não é um base64), remove do formData
+                            if (!currentSelfie.startsWith("data:image/")) {
+                                formData.delete("person[selfie]");
+                            }
+                        }
+
                         const response = await fetch(form.action, {
                             method: form.method,
                             headers: {
@@ -464,21 +496,21 @@
                         } else {
                             // Em caso de sucesso, exibe a senha em destaque
                             const person = responseData.data.person;
-                            const PicketCode = responseData.data.ticket_code;
+                            const benefitDelivery = responseData.data.benefit_delivery;
+                            const message = responseData.message || "Requisição processada com sucesso!";
+                            const TicketCode = responseData.data.ticket_code;
 
                             Swal.fire({
                                 icon: 'success',
-                                title: 'Registro Efetuado!',
+                                title: message,
                                 html: `
-                        <p><strong>Senha:</strong>
-                           <span style="font-size: 1.5rem; color: #D35400;">
-                              ${PicketCode}
-                           </span>
-                        </p>
-                        <p><strong>Nome:</strong> ${person.name}</p>
-                        <p><strong>CPF:</strong> ${person.cpf}</p>
-                        ${ person.phone ? `<p><strong>Telefone:</strong> ${person.phone}</p>` : '' }
-                    `,
+                    <div class="flex flex-col">
+                        <small>Senha:</small>
+                        <span style="font-size: 2rem; color: #D35400;">${TicketCode}</span>
+                    </div>
+                    <p><strong>Nome:</strong> ${person.name}</p>
+                    <p><strong>CPF:</strong> ${formatCPF(person.cpf)}</p>
+                    ${ person.phone ? `<p><strong>Telefone:</strong> ${formatPhone(person.phone)}</p>` : '' }`,
                                 confirmButtonText: 'OK'
                             }).then((result) => {
                                 if (result.isConfirmed) {

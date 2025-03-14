@@ -20,7 +20,7 @@ class BenefitDeliveryController extends Controller
             "CASE
         WHEN status = 'REISSUED' THEN 1 ELSE 0 END, id DESC"
         )
-            ->paginate(10)->withPath(url()->current());
+            ->paginate($this->agent->isDesktop() ? 10 : 30)->withPath(url()->current());
 
         if ($request->ajax()) {
             return view('benefit-deliveries.partials.table', compact('benefitDeliveries'))->render();
@@ -28,7 +28,6 @@ class BenefitDeliveryController extends Controller
 
         return view('benefit-deliveries.index', compact('benefitDeliveries'));
     }
-
 
     public function create()
     {
@@ -38,80 +37,90 @@ class BenefitDeliveryController extends Controller
 
     public function store(BenefitDeliveryStoreRequest $request)
     {
-        $validated = $request->validated();
+        $inputData = $request->all();
+        // 🔹 1️⃣ Verifica se a pessoa já existe pelo CPF
+        $person = Person::where('cpf', $inputData['person']['cpf'])->first();
 
-        // Decode the base64 selfie image
-        $imageData = base64_decode(str_replace('data:image/png;base64,', '', $validated['person']['selfie']));
+        if ($person) {
+            // Atualiza os dados da pessoa existente
+            $person->update([
+                'name' => $inputData['person']['name'],
+                'phone' => $inputData['person']['phone'] ?? $person->phone,
+            ]);
 
-        // Create unique file names
-        $randName = uniqid();
-        $selfieName = 'selfies/'.$randName.'.png';
-        $thumbName = 'selfies/thumbs/'.$randName.'.png';
+            // 🔹 2️⃣ Impede cadastrar o mesmo benefício para a mesma pessoa se estiver PENDENTE ou ENTREGUE
+            $existingBenefit = BenefitDelivery::where('person_id', $person->id)
+                ->where('benefit_id', $inputData['benefit_id']) // ✅ Apenas para o mesmo benefício
+                ->whereIn('status', ['PENDING', 'DELIVERED']) // ✅ Apenas se estiver pendente ou entregue
+                ->exists();
 
-        $manager = new ImageManager(new Driver());
+            if ($existingBenefit) {
+                return response()->json([
+                    'success' => false,
+                    'message' => 'Essa pessoa já possui este benefício ativo ou entregue.',
+                ], 422);
+            }
 
-        // Process full image
-        $imageFull = $manager->read($imageData)
-            ->cover(500, 500)
-            ->encode();
+        } else {
+            // 🔹 Criar uma nova pessoa caso não exista
+            $person = Person::create([
+                'name' => $inputData['person']['name'],
+                'cpf' => $inputData['person']['cpf'],
+                'phone' => $inputData['person']['phone'] ?? null,
+            ]);
+        }
 
-        // Process thumbnail
-        $imageThumb = $manager->read($imageData)
-            ->cover(150, 150)
-            ->encode();
+        // 🔹 Se veio selfie nova, processa e armazena
+        if (!empty($inputData['person']['selfie'])) {
+            $imageData = base64_decode(str_replace('data:image/png;base64,', '', $inputData['person']['selfie']));
+            $randName = uniqid();
+            $selfieName = 'selfies/' . $randName . '.png';
+            $thumbName = 'selfies/thumbs/' . $randName . '.png';
 
-        // Initialize Google Cloud Storage
-        $storage = new StorageClient(['keyFilePath' => env('GOOGLE_CLOUD_KEY_FILE_PATH')]);
-        $bucket = $storage->bucket(env('GOOGLE_CLOUD_STORAGE_BUCKET'));
+            $manager = new ImageManager(new Driver());
+            $imageFull = $manager->read($imageData)->cover(500, 500)->encode();
+            $imageThumb = $manager->read($imageData)->cover(150, 150)->encode();
 
-        // Upload images
-        $bucket->upload($imageFull, ['name' => $selfieName]);
-        $bucket->upload($imageThumb, ['name' => $thumbName]);
+            $storage = new StorageClient(['keyFilePath' => env('GOOGLE_CLOUD_KEY_FILE_PATH')]);
+            $bucket = $storage->bucket(env('GOOGLE_CLOUD_STORAGE_BUCKET'));
 
-        // Create Person record
-        $person = Person::create([
-            'name' => $validated['person']['name'],
-            'cpf' => $validated['person']['cpf'],
-            'phone' => $validated['person']['phone'] ?? null,
-            'selfie_path' => $selfieName,
-            'thumb_path' => $thumbName,
-        ]);
+            // Upload das imagens no Cloud Storage
+            $bucket->upload($imageFull, ['name' => $selfieName]);
+            $bucket->upload($imageThumb, ['name' => $thumbName]);
 
-        // Generate a 6-digit password code
+            // Atualiza os caminhos da selfie na pessoa
+            $person->update([
+                'selfie_path' => $selfieName,
+                'thumb_path' => $thumbName,
+            ]);
+        }
+
+        // 🔹 Gerar código do ticket e definir validade
         $ticketCode = random_int(100000, 999999);
-
-        // Define validity period (e.g., 1 hour from now)
         $validUntil = now()->addWeek();
 
-        // Create BenefitDelivery record with new columns
+        // 🔹 Criar a entrega do benefício
         $benefitDelivery = BenefitDelivery::create([
-            'benefit_id' => $validated['benefit_id'],
+            'benefit_id' => $inputData['benefit_id'],
             'person_id' => $person->id,
             'ticket_code' => $ticketCode,
             'valid_until' => $validUntil,
             'status' => 'PENDING',
             'registered_by' => auth()->check() ? auth()->user()->id : null,
             'delivered_at' => null,
-            'unit_id' => $validated['unit_id'] ?? null,
+            'unit_id' => $inputData['unit_id'] ?? null,
         ]);
 
-        // Return JSON response for AJAX request
-        if ($request->expectsJson()) {
-            return response()->json([
-                'success' => true,
-                'message' => 'Benefit delivery registered successfully!',
-                'data' => [
-                    'benefit_delivery' => $benefitDelivery,
-                    'person' => $person,
-                    'ticket_code' => $ticketCode
-                ],
-            ]);
-        }
-
-        return redirect()->route('benefit-deliveries.index')
-            ->with('success', 'Benefit delivery registered successfully!');
+        return response()->json([
+            'success' => true,
+            'message' => 'Registro Efetuado',
+            'data' => [
+                'benefit_delivery' => $benefitDelivery,
+                'person' => $person,
+                'ticket_code' => $ticketCode
+            ],
+        ]);
     }
-
 
     public function edit(BenefitDelivery $benefitDelivery)
     {
@@ -121,36 +130,44 @@ class BenefitDeliveryController extends Controller
 
     public function update(BenefitDeliveryUpdateRequest $request, BenefitDelivery $benefitDelivery)
     {
-        $validated = $request->validated();
+        $inputData = $request->all();
         $person = $benefitDelivery->person;
 
-        // Inicializa o Google Cloud Storage
-        $storage = new StorageClient(['keyFilePath' => env('GOOGLE_CLOUD_KEY_FILE_PATH')]);
-        $bucket = $storage->bucket(env('GOOGLE_CLOUD_STORAGE_BUCKET'));
+        // 🔹 1️⃣ Impedir atualização se já existir esse benefício para essa pessoa com status PENDENTE ou ENTREGUE
+        $existingBenefit = BenefitDelivery::where('person_id', $person->id)
+            ->where('benefit_id', $inputData['benefit_id']) // ✅ Apenas para o mesmo benefício
+            ->whereIn('status', ['PENDING', 'DELIVERED']) // ✅ Apenas se estiver pendente ou entregue
+            ->where('id', '!=', $benefitDelivery->id) // ✅ Ignora o próprio benefício que está sendo atualizado
+            ->exists();
 
-        if (!empty($validated['person']['selfie'])) {
-            // Decodifica a nova selfie Base64 corretamente
-            $imageData = base64_decode(str_replace('data:image/png;base64,', '', $validated['person']['selfie']));
+        if ($existingBenefit) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Essa pessoa já possui este benefício ativo ou entregue.',
+            ], 422);
+        }
 
-            // Criar nomes únicos
+        // 🔹 2️⃣ Atualizar os dados da pessoa (mas mantém o CPF)
+        $person->update([
+            'name' => $inputData['person']['name'],
+            'phone' => $inputData['person']['phone'] ?? $person->phone,
+        ]);
+
+        // 🔹 3️⃣ Processar selfie nova apenas se foi enviada
+        if (!empty($inputData['person']['selfie'])) {
+            $imageData = base64_decode(str_replace('data:image/png;base64,', '', $inputData['person']['selfie']));
             $randName = uniqid();
-            $selfieName = 'selfies/'.$randName.'.png';
-            $thumbName = 'selfies/thumbs/'.$randName.'.png';
+            $selfieName = 'selfies/' . $randName . '.png';
+            $thumbName = 'selfies/thumbs/' . $randName . '.png';
 
-            // Criar as imagens com Intervention
             $manager = new ImageManager(new Driver());
+            $imageFull = $manager->read($imageData)->cover(500, 500)->encode();
+            $imageThumb = $manager->read($imageData)->cover(150, 150)->encode();
 
-            // Criar a imagem completa
-            $imageFull = $manager->read($imageData)
-                ->cover(500, 500) // Recorte quadrado centralizado
-                ->encode();
+            $storage = new StorageClient(['keyFilePath' => env('GOOGLE_CLOUD_KEY_FILE_PATH')]);
+            $bucket = $storage->bucket(env('GOOGLE_CLOUD_STORAGE_BUCKET'));
 
-            // Criar a miniatura quadrada sem distorção
-            $imageThumb = $manager->read($imageData)
-                ->cover(150, 150) // Mantém proporção e corta centralizado
-                ->encode();
-
-            // Excluir as imagens antigas no Google Cloud Storage
+            // 🔹 Remove imagens antigas antes de fazer upload das novas
             if (!empty($person->selfie_path)) {
                 $bucket->object($person->selfie_path)->delete();
             }
@@ -158,36 +175,33 @@ class BenefitDeliveryController extends Controller
                 $bucket->object($person->thumb_path)->delete();
             }
 
-            // Upload da nova imagem grande
+            // Upload das novas imagens
             $bucket->upload($imageFull, ['name' => $selfieName]);
-
-            // Upload da nova thumbnail
             $bucket->upload($imageThumb, ['name' => $thumbName]);
 
-            // Atualizar os caminhos das imagens
-            $validated['person']['selfie_path'] = $selfieName;
-            $validated['person']['thumb_path'] = $thumbName;
+            // Atualiza os caminhos da selfie na pessoa
+            $person->update([
+                'selfie_path' => $selfieName,
+                'thumb_path' => $thumbName,
+            ]);
         }
 
-        // Atualizar os dados da pessoa
-        $person->update([
-            'name' => $validated['person']['name'],
-            'cpf' => $validated['person']['cpf'],
-            'phone' => $validated['person']['phone'] ?? null,
-            'selfie_path' => $validated['person']['selfie_path'] ?? $person->selfie_path,
-            'thumb_path' => $validated['person']['thumb_path'] ?? $person->thumb_path,
-        ]);
-
-        // Atualizar a entrega do benefício
+        // 🔹 4️⃣ Atualizar a entrega do benefício
         $benefitDelivery->update([
-            'benefit_id' => $validated['benefit_id'],
+            'benefit_id' => $inputData['benefit_id'],
         ]);
 
-        return redirect()->route('benefit-deliveries.index')->with(
-            'success',
-            'Registro de entrega atualizado com sucesso!'
-        );
+        return response()->json([
+            'success' => true,
+            'message' => 'Registro Atualizado',
+            'data' => [
+                'benefit_delivery' => $benefitDelivery,
+                'person' => $person,
+                'ticket_code' => $benefitDelivery->ticket_code
+            ],
+        ]);
     }
+
 
     public function destroy(BenefitDelivery $benefitDelivery)
     {
