@@ -134,7 +134,6 @@
     <script>
         document.addEventListener("DOMContentLoaded", function () {
             const form = document.getElementById('benefit-delivery-register-form');
-            const ajaxError = document.getElementById('ajax-error');
             const isEditing = @json($isEditing);
             const searchModal = document.getElementById("searchModal");
             const searchInput = document.getElementById("searchInput");

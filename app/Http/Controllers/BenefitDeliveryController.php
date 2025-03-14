@@ -8,6 +8,7 @@ use App\Models\Base\Benefit;
 use App\Models\Base\BenefitDelivery;
 use App\Models\Person;
 use Google\Cloud\Storage\StorageClient;
+use Illuminate\Http\Request;
 use Intervention\Image\Drivers\Gd\Driver;
 use Intervention\Image\ImageManager;
 
@@ -184,4 +185,79 @@ class BenefitDeliveryController extends Controller
         $person = BenefitDelivery::with('person', 'benefit')->find($benefitDeliveryId);
         return response()->json($person);
     }
+
+    public function deliver(BenefitDelivery $benefitDelivery)
+    {
+        if ($benefitDelivery->status !== 'PENDING') {
+            return response()->json([
+                'success' => false,
+                'message' => 'Esta entrega não está pendente ou já foi finalizada.'
+            ], 400);
+        }
+
+        $benefitDelivery->update([
+            'status'       => 'DELIVERED',
+            'delivered_at' => now(),
+            'delivered_by' => auth()->check() ? auth()->user()->id : null,
+        ]);
+
+        return response()->json([
+            'success' => true,
+            'message' => 'Entrega registrada com sucesso!'
+        ]);
+    }
+
+    public function filter(Request $request)
+    {
+        $filter = $request->get('filter', '');
+
+        $deliveries = BenefitDelivery::with(['person', 'benefit'])
+            ->when($filter, function($query, $filter) {
+                $query->where('password_code', 'like', "%{$filter}%")
+                    ->orWhereHas('person', function ($q) use ($filter) {
+                        $q->where('cpf', 'like', "%{$filter}%")
+                            ->orWhere('name', 'like', "%{$filter}%");
+                    });
+            })->paginate(10);
+
+        $html = view('benefit-deliveries._table_body', compact('deliveries'))->render();
+
+        return response()->json([
+            'success' => true,
+            'html'    => $html,
+        ]);
+    }
+
+
+    public function quickDeliver(Request $request)
+    {
+        $request->validate([
+            'password_code' => 'required|string',
+        ]);
+
+        $passwordCode = $request->input('password_code');
+
+        $benefitDelivery = BenefitDelivery::where('password_code', $passwordCode)
+            ->where('status', 'PENDING')
+            ->first();
+
+        if (!$benefitDelivery) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Entrega não encontrada ou já finalizada.'
+            ], 404);
+        }
+
+        $benefitDelivery->update([
+            'status'       => 'DELIVERED',
+            'delivered_at' => now(),
+            'delivered_by' => auth()->check() ? auth()->user()->id : null,
+        ]);
+
+        return response()->json([
+            'success' => true,
+            'message' => 'Baixa realizada com sucesso!'
+        ]);
+    }
+
 }
