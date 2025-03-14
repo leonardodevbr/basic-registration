@@ -37,6 +37,6 @@ jobs:
           ssh -o StrictHostKeyChecking=no $USERNAME@$HOST << EOF
             cd $DIRECTORY || exit 1
             php artisan down || true
-            php artisan migrate:fresh --seed --seeder=BenefitDeliverySeeder
+            php artisan migrate:fresh --seed --seeder=BenefitDeliverySeeder --force
             php artisan up
           EOF
