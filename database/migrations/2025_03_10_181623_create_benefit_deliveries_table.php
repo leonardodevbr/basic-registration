@@ -18,7 +18,7 @@ return new class extends Migration
             $table->foreignId('person_id')->constrained('people');
 
             // New columns for password issuance and expiration
-            $table->string('password_code')->unique(); // Code generated at registration
+            $table->string('ticket_code')->unique(); // Code generated at registration
             $table->dateTime('valid_until'); // Expiration date/time for the code
 
             // Status of the code (e.g., PENDING, DELIVERED, EXPIRED)

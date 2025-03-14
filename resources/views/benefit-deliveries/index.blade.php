@@ -5,406 +5,69 @@
             <!-- Breadcrumbs -->
             <nav class="text-sm text-gray-500 my-2 ml-2" aria-label="Breadcrumb">
                 <ol class="list-reset flex">
-                    <li><a href="{{ route('dashboard') }}" class="text-indigo-600 hover:text-indigo-800">Dashboard</a></li>
+                    <li><a href="{{ route('dashboard') }}" class="text-indigo-600 hover:text-indigo-800">Dashboard</a>
+                    </li>
                     <li><span class="mx-2">/</span></li>
                     <li>Benefícios entregues</li>
                 </ol>
             </nav>
 
-            <div class="mb-4">
-                <form id="filter-form" class="flex items-start space-x-2">
-                    <div class="w-full">
-                        <input type="text" autocomplete="off" name="filter" id="filter" placeholder="Filtrar por senha, CPF ou nome" class="border rounded px-2 py-1 w-full" />
-                        <div id="filter-error" class="text-red-500 text-sm mt-1"></div>
-                    </div>
-                    <button type="submit" class="bg-blue-500 text-white px-3 py-1 rounded hover:bg-blue-600">
-                        Filtrar
-                    </button>
-                </form>
-            </div>
-
+            <!-- Container Principal -->
             <div class="bg-white md:shadow-md md:rounded-md mf:p-6 px-3 py-6">
                 <div class="flex justify-between items-center mb-4">
                     <h2 class="md:text-xl font-semibold text-gray-800">Benefícios Entregues</h2>
-                    <button onclick="openQuickDeliveryModal()" class="bg-[orange] text-white ml-auto mr-2 px-4 py-2 rounded hover:bg-blue-600">
-                        Baixa Rápida
-                    </button>
-                    <a href="{{ route('benefit-deliveries.create') }}" class="bg-indigo-500 hover:bg-indigo-600 text-white px-4 py-2 rounded-md">Novo registro</a>
+                    <a href="{{ route('benefit-deliveries.create') }}"
+                       class="bg-indigo-500 hover:bg-indigo-600 text-center text-white ml-auto px-4 py-2 rounded">Novo
+                        registro</a>
                 </div>
+
+                <form id="filter-form" class="flex items-start space-x-2 mb-2">
+                    <div class="w-full">
+                        <input type="text" autocomplete="off" name="filter" id="filter"
+                               placeholder="Filtrar por senha, CPF ou nome" class="border rounded px-2 py-1 w-full"/>
+                    </div>
+                    <button type="submit" class="bg-[orange] text-white px-3 py-1 rounded hover:bg-[#ffb93a]">Filtrar
+                    </button>
+                </form>
+
                 <div class="overflow-x-auto">
-                    <table class="min-w-full table-auto md:table-fixed divide-y divide-gray-200">
-                        <thead class="bg-gray-50">
-                        <tr>
-                            <th class="py-3 px-6 text-left">Selfie</th>
-                            <th class="py-3 px-6 text-left">Nome</th>
-                            <th class="py-3 px-6 text-left">CPF</th>
-                            <th class="py-3 px-6 text-left">Telefone</th>
-                            <th class="py-3 px-6 text-left">Benefício</th>
-                            <th class="py-3 px-6 text-left">Data</th>
-                            <th class="py-3 px-6 text-left">Ações</th>
-                        </tr>
-                        </thead>
-                        <tbody id="deliveries-table-body">
-                        @foreach($benefitDeliveries as $benefitDelivery)
-                            <tr class="border-b hover:bg-gray-50" data-code="{{ $benefitDelivery->password_code }}">
-                                <td class="py-4 md:px-6 cursor-pointer">
-                                    @if($benefitDelivery->person->selfie_path)
-                                        <img src="{{ $benefitDelivery->person->thumb_url }}"
-                                             alt="Selfie"
-                                             loading="lazy"
-                                             class="w-16 h-16 rounded-full object-cover mx-auto"
-                                             onclick="openModal('{{ $benefitDelivery->id }}')">
-                                    @else
-                                        <span class="text-gray-500">Sem selfie</span>
-                                    @endif
-                                </td>
-                                <td class="py-4 px-6 whitespace-nowrap max-w-[150px] truncate">
-                                    {{ $benefitDelivery->person->name }}
-                                </td>
-                                <td class="py-4 px-6 whitespace-nowrap">
-                                    {{ preg_replace("/(\d{3})(\d{3})(\d{3})(\d{2})/", "$1.$2.$3-$4", $benefitDelivery->person->cpf) }}
-                                </td>
-                                <td class="py-4 px-6 whitespace-nowrap">
-                                    {{ preg_replace("/(\d{2})(\d{5})(\d{4})/", "($1) $2-$3", $benefitDelivery->person->phone) }}
-                                </td>
-                                <td class="py-4 px-6 whitespace-nowrap max-w-[150px] truncate">
-                                    <span>{{ $benefitDelivery->benefit->name }}</span><br>
-                                    <div class="status-col">
-                                        @switch($benefitDelivery->status)
-                                            @case('PENDING')
-                                                <span class="bg-blue-100 text-blue-800 text-xs font-medium px-2.5 py-0.5 rounded-full">Pendente</span>
-                                                @break
-                                            @case('DELIVERED')
-                                                <span class="bg-green-100 text-green-800 text-xs font-medium px-2.5 py-0.5 rounded-full">Entregue</span>
-                                                @break
-                                            @case('EXPIRED')
-                                                <span class="bg-red-100 text-red-800 text-xs font-medium px-2.5 py-0.5 rounded-full">Expirado</span>
-                                                @break
-                                        @endswitch
-                                    </div>
-                                </td>
-                                <td class="py-4 px-6 whitespace-nowrap max-w-[150px] truncate">
-                                    {{ $benefitDelivery->benefit->created_at->format('d/m/Y H:i') }}
-                                </td>
-                                <td class="py-4 px-6">
-                                    <div class="flex items-center space-x-3">
-                                        <a href="{{ route('benefit-deliveries.edit', $benefitDelivery) }}"
-                                           class="bg-indigo-500 text-white px-2 py-1 rounded hover:bg-indigo-600">
-                                            Editar
-                                        </a>
-                                        <form action="{{ route('benefit-deliveries.destroy', $benefitDelivery) }}"
-                                              method="POST" class="inline-block delete-form">
-                                            @csrf
-                                            @method('DELETE')
-                                            <button type="submit" class="bg-red-500 text-white px-2 py-1 rounded hover:bg-red-600">
-                                                Excluir
-                                            </button>
-                                        </form>
-                                        @if($benefitDelivery->status === 'PENDING')
-                                            <button type="button"
-                                                    class="bg-green-500 text-white px-2 py-1 rounded hover:bg-green-600"
-                                                    onclick="confirmDelivery({{ $benefitDelivery->id }})">
-                                                Dar Baixa
-                                            </button>
-                                        @endif
-                                    </div>
-                                </td>
-                            </tr>
-                        @endforeach
-                        </tbody>
-                    </table>
-                    <div class="mt-4">
-                        {{ $benefitDeliveries->links() }}
+                    <div id="table-container">
+                        @include('benefit-deliveries.partials.table', ['benefitDeliveries' => $benefitDeliveries])
                     </div>
                 </div>
             </div>
         </div>
-    </div>
-    <!-- Modal -->
-    <div id="imageModal" class="fixed inset-0 bg-gray-800 bg-opacity-75 flex items-center justify-center hidden">
-        <div class="bg-white p-6 rounded-lg relative">
-            <button onclick="closeModal()" class="absolute top-2 right-2 text-gray-500">&times;</button>
-            <h2 id="modalTitle" class="text-xl font-bold"></h2>
-            <p id="modalCpf" class="text-sm text-gray-500"></p>
-            <p id="modalPhone" class="text-sm text-gray-500"></p>
-            <p id="modalBenefit" class="text-sm text-gray-500"></p>
-            <p id="modalPasswordCode" class="text-sm text-gray-500"></p>
-            <p id="modalStatus" class="text-sm text-gray-500 mb-4"></p>
-            <img id="modalImage" src="" class="w-80 h-80 rounded">
-        </div>
+
+        <!-- Botão Flutuante para Entrega Rápida -->
+        <button onclick="openQuickDeliveryModal()"
+                class="bg-indigo-500 hover:bg-indigo-600 text-white px-4 py-2 rounded shadow-lg fixed bottom-5 right-5">
+            Entrega Rápida
+        </button>
     </div>
 
-    <!-- Quick Delivery Modal -->
-    <div id="quickDeliveryModal" class="fixed inset-0 flex items-center justify-center bg-gray-900 bg-opacity-50 hidden">
+    <!-- Modal de Entrega Rápida -->
+    <div id="quickDeliveryModal"
+         class="fixed inset-0 flex items-center justify-center bg-gray-900 bg-opacity-50 hidden">
         <div class="bg-white p-6 rounded-lg relative w-96">
-            <button onclick="closeQuickDeliveryModal()" class="absolute top-2 right-2 text-gray-500 text-2xl">&times;</button>
-            <h2 class="text-xl font-bold mb-4">Baixa Rápida</h2>
-            <input type="text" id="quickDeliveryCode" placeholder="Digite a senha (6 dígitos)" class="border rounded w-full p-2 mb-4" maxlength="6">
-            <button type="button" onclick="quickDelivery()" class="w-full bg-green-500 text-white px-4 py-2 rounded hover:bg-green-600">
-                Dar Baixa Rápida
+            <button onclick="closeQuickDeliveryModal()" class="absolute top-2 right-2 text-gray-500 text-2xl">&times;
+            </button>
+            <h2 class="text-xl font-bold mb-4">Entrega Rápida</h2>
+            <input type="text" id="quickDeliveryCode" placeholder="Digite a senha (6 dígitos)"
+                   class="border rounded w-full p-2 mb-4" maxlength="6">
+            <button type="button" onclick="quickDelivery()"
+                    class="w-full bg-green-500 text-white px-4 py-2 rounded hover:bg-green-600">
+                Processar
             </button>
         </div>
     </div>
 
-@push('scripts')
+    @push('scripts')
         <script>
-            document.addEventListener("DOMContentLoaded", function () {
-                const filterInput = document.getElementById("filter");
-                const filterError = document.getElementById("filter-error");
-                const loadingOverlay = document.getElementById("loading-overlay");
-
-                // Flag para resetar o filtro quando estiver vazio
-                let emptyFilterSent = false;
-                // Variável para armazenar o último filtro enviado (com pelo menos 3 caracteres)
-                let lastSubmittedFilter = "";
-
-                filterInput?.addEventListener("input", function () {
-                    let value = filterInput.value;
-
-                    // Se o valor contiver apenas dígitos, aplica a máscara do CPF se tiver mais de 6 dígitos
-                    if (/^\d/.test(value)) {
-                        value = value.replace(/\D/g, ""); // Remove tudo que não for número
-
-                        if (value.length > 6) value = value.replace(/^(\d{3})(\d)/, "$1.$2");
-                        if (value.length > 6) value = value.replace(/^(\d{3})\.(\d{3})(\d)/, "$1.$2.$3");
-                        if (value.length > 9) value = value.replace(/^(\d{3})\.(\d{3})\.(\d{3})(\d)/, "$1.$2.$3-$4");
-
-                        if (value.length > 14) {
-                            value = value.slice(0, 14);
-                        }
-                    }
-
-                    filterInput.value = value; // Atualiza o campo
-
-                    // Se o campo for limpo, reseta lastSubmittedFilter e dispara o reset apenas uma vez
-                    if (value.trim() === '') {
-                        lastSubmittedFilter = "";
-                        if (!emptyFilterSent) {
-                            emptyFilterSent = true;
-                            filterError.classList.add("hidden");
-                            loadingOverlay.classList.remove("hidden");
-                            fetch("{{ route('benefit-deliveries.filter') }}?filter=", {
-                                headers: { 'Accept': 'application/json' }
-                            })
-                                .then(response => response.json())
-                                .then(data => {
-                                    if (data.success) {
-                                        document.getElementById("deliveries-table-body").innerHTML = data.html;
-                                    } else {
-                                        Swal.fire({
-                                            icon: 'error',
-                                            title: 'Erro',
-                                            text: data.message || 'Falha ao carregar os registros.',
-                                            confirmButtonText: 'OK'
-                                        });
-                                    }
-                                })
-                                .catch(error => {
-                                    console.error("Erro ao resetar filtro:", error);
-                                    Swal.fire({
-                                        icon: 'error',
-                                        title: 'Erro',
-                                        text: 'Ocorreu um erro ao resetar o filtro. Tente novamente.',
-                                        confirmButtonText: 'OK'
-                                    });
-                                })
-                                .finally(() => {
-                                    loadingOverlay.classList.add("hidden");
-                                });
-                        }
-                    } else {
-                        // Se houver conteúdo, reseta a flag de reset e o último filtro enviado
-                        emptyFilterSent = false;
-                        lastSubmittedFilter = "";
-                    }
-                });
-
-                filterInput?.addEventListener("keypress", async function (e) {
-                    if (e.key === "Enter") {
-                        e.preventDefault();
-                        const filtro = filterInput.value.trim();
-
-                        // Se estiver vazio, já foi tratado no "input", então apenas retorna
-                        if (filtro === "") {
-                            return;
-                        }
-
-                        // Se o filtro tiver menos de 3 caracteres, exibe mensagem de erro e não envia a requisição
-                        if (filtro.length < 3) {
-                            filterError.textContent = "Digite pelo menos 3 caracteres para a busca.";
-                            filterError.classList.remove("hidden");
-                            return;
-                        } else {
-                            filterError.classList.add("hidden");
-                        }
-
-                        // Verifica se o mesmo filtro já foi enviado
-                        if (filtro === lastSubmittedFilter) {
-                            return;
-                        }
-                        lastSubmittedFilter = filtro;
-
-                        loadingOverlay.classList.remove("hidden");
-
-                        try {
-                            const response = await fetch("{{ route('benefit-deliveries.filter') }}?filter=" + encodeURIComponent(filtro), {
-                                headers: { 'Accept': 'application/json' }
-                            });
-                            const data = await response.json();
-                            if (data.success) {
-                                document.getElementById("deliveries-table-body").innerHTML = data.html;
-                            } else {
-                                Swal.fire({
-                                    icon: 'error',
-                                    title: 'Erro',
-                                    text: data.message || 'Falha ao filtrar os registros.',
-                                    confirmButtonText: 'OK'
-                                });
-                            }
-                        } catch (error) {
-                            console.error("Erro ao filtrar:", error);
-                            Swal.fire({
-                                icon: 'error',
-                                title: 'Erro',
-                                text: 'Ocorreu um erro ao filtrar os registros. Tente novamente.',
-                                confirmButtonText: 'OK'
-                            });
-                        } finally {
-                            loadingOverlay.classList.add("hidden");
-                        }
-                    }
-                });
-            });
-
-
-            // Função para abrir o modal e focar no input
-            function openQuickDeliveryModal() {
-                const modal = document.getElementById('quickDeliveryModal');
-                modal.classList.remove('hidden');
-                document.getElementById('quickDeliveryCode').focus();
-            }
-
-            // Função para fechar o modal
-            function closeQuickDeliveryModal() {
-                document.getElementById('quickDeliveryModal').classList.add('hidden');
-            }
-
-            // Listener para enviar ao pressionar ENTER, somente se houver 6 dígitos
+            const filterInput = document.getElementById("filter");
+            const filterForm = document.getElementById("filter-form");
+            const tableContainer = document.getElementById("table-container");
             const quickDeliveryInput = document.getElementById('quickDeliveryCode');
-            quickDeliveryInput.addEventListener('keypress', function(e) {
-                if (e.key === 'Enter') {
-                    e.preventDefault();
-                    const code = quickDeliveryInput.value.trim();
-                    if (code.length === 6) {
-                        quickDelivery(); // Chama a função de baixa rápida
-                    } else {
-                        Swal.fire({
-                            icon: 'warning',
-                            title: 'Atenção',
-                            text: 'Insira um código de 6 dígitos.',
-                            confirmButtonText: 'OK'
-                        });
-                    }
-                }
-            });
-
-            // Função para processar a baixa rápida
-            async function quickDelivery() {
-                const code = quickDeliveryInput.value.trim();
-                if (code.length !== 6) {
-                    Swal.fire({
-                        icon: 'warning',
-                        title: 'Atenção',
-                        text: 'Insira um código de 6 dígitos.',
-                        confirmButtonText: 'OK'
-                    });
-                    return;
-                }
-                try {
-                    const response = await fetch("{{ route('benefit-deliveries.quick-deliver') }}", {
-                        method: 'PATCH',
-                        headers: {
-                            'Content-Type': 'application/json',
-                            'X-CSRF-TOKEN': '{{ csrf_token() }}',
-                            'Accept': 'application/json'
-                        },
-                        body: JSON.stringify({ password_code: code })
-                    });
-                    const data = await response.json();
-                    if (response.ok && data.success) {
-                        Swal.fire({
-                            icon: 'success',
-                            title: 'Baixa Registrada',
-                            text: data.message,
-                            confirmButtonText: 'OK'
-                        }).then(() => {
-                            // Limpa o campo e foca novamente para nova entrada
-                            quickDeliveryInput.value = '';
-                            quickDeliveryInput.focus();
-
-                            // Atualiza a linha na tabela: busca pelo atributo data-code
-                            const row = document.querySelector(`[data-code="${code}"]`);
-                            if (row) {
-                                // Atualiza o status para "Entregue"
-                                const statusCell = row.querySelector('.status-col');
-                                if (statusCell) {
-                                    statusCell.innerHTML = `<span class="bg-green-100 text-green-800 text-xs font-medium px-2.5 py-0.5 rounded-full">Entregue</span>`;
-                                }
-                                // Oculta o botão "Dar Baixa" na linha
-                                const deliverButton = row.querySelector('button[onclick^="confirmDelivery"]');
-                                if (deliverButton) {
-                                    deliverButton.style.display = 'none';
-                                }
-                            }
-                        });
-                    } else {
-                        Swal.fire({
-                            icon: 'error',
-                            title: 'Erro',
-                            text: data.message || 'Falha ao registrar a baixa.',
-                            confirmButtonText: 'OK'
-                        });
-                    }
-                } catch (error) {
-                    console.error('Erro:', error);
-                    Swal.fire({
-                        icon: 'error',
-                        title: 'Erro Inesperado',
-                        text: 'Ocorreu um erro inesperado. Tente novamente.',
-                        confirmButtonText: 'OK'
-                    });
-                }
-            }
-
-            document.getElementById('filter-form').addEventListener('submit', async function(e) {
-                e.preventDefault();
-                const filter = document.getElementById('filter').value.trim();
-                try {
-                    const response = await fetch("{{ route('benefit-deliveries.filter') }}?filter=" + encodeURIComponent(filter), {
-                        headers: {
-                            'Accept': 'application/json'
-                        }
-                    });
-                    const data = await response.json();
-                    if (data.success) {
-                        // Atualize o corpo da tabela com o HTML retornado
-                        document.getElementById('deliveries-table-body').innerHTML = data.html;
-                    } else {
-                        Swal.fire({
-                            icon: 'error',
-                            title: 'Erro',
-                            text: data.message || 'Falha ao filtrar os registros.'
-                        });
-                    }
-                } catch (error) {
-                    console.error("Erro ao filtrar:", error);
-                    Swal.fire({
-                        icon: 'error',
-                        title: 'Erro',
-                        text: 'Ocorreu um erro ao filtrar os registros. Tente novamente.'
-                    });
-                }
-            });
+            const urlParams = new URLSearchParams(window.location.search);
 
             function openModal(benefitDeliveryId) {
                 const modalImage = document.getElementById("modalImage");
@@ -439,7 +102,7 @@
                         document.getElementById("modalCpf").innerText = "CPF: " + cpfFormatado;
                         document.getElementById("modalPhone").innerText = "Telefone: " + telefoneFormatado;
                         document.getElementById("modalBenefit").innerText = "Benefício: " + data.benefit.name;
-                        document.getElementById("modalPasswordCode").innerText = "Senha: " + data.password_code;
+                        document.getElementById("modalTicketCode").innerText = "Senha: " + data.ticket_code;
                         document.getElementById("modalStatus").innerText = "Status: " + data.status;
                         document.getElementById("imageModal").classList.remove("hidden");
                     })
@@ -452,16 +115,6 @@
                         // Esconde o loading quando os dados estiverem carregados
                         loadingOverlay.classList.add("hidden");
                     });
-            }
-
-
-            function closeModal() {
-                document.getElementById("imageModal").classList.add("hidden");
-            }
-
-
-            function closeModal() {
-                document.getElementById("imageModal").classList.add("hidden");
             }
 
             function formatCPF(cpf) {
@@ -497,7 +150,8 @@
                     confirmButtonColor: '#3085d6',
                     cancelButtonColor: '#d33',
                     confirmButtonText: 'Sim, dar baixa!',
-                    cancelButtonText: 'Cancelar'
+                    cancelButtonText: 'Cancelar',
+                    reverseButtons: true
                 }).then((result) => {
                     if (result.isConfirmed) {
                         fetch(`/benefit-deliveries/${deliveryId}/deliver`, {
@@ -541,6 +195,316 @@
                 });
             }
 
+            function reissueTicket(benefitId) {
+                Swal.fire({
+                    title: 'Reemitir Ticket?',
+                    text: 'Tem certeza de que deseja gerar um novo ticket para esta entrega?',
+                    icon: 'warning',
+                    showCancelButton: true,
+                    cancelButtonText: 'Cancelar',
+                    confirmButtonText: 'Sim, reemitir!',
+                    confirmButtonColor: '#f59e0b', // Amarelo
+                    cancelButtonColor: '#6c757d', // Cinza
+                    reverseButtons: true
+                }).then((result) => {
+                    if (result.isConfirmed) {
+                        fetch(`/benefit-deliveries/${benefitId}/reissue`, {
+                            method: 'POST',
+                            headers: {
+                                'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').getAttribute('content'),
+                                'Accept': 'application/json',
+                                'Content-Type': 'application/json'
+                            }
+                        })
+                            .then(response => response.json())
+                            .then(data => {
+                                if (data.success) {
+                                    Swal.fire({
+                                        icon: 'success',
+                                        title: 'Ticket Reemitido',
+                                        text: data.message,
+                                        confirmButtonText: 'OK'
+                                    });
+
+                                    // Recarrega apenas a tabela
+                                    fetch(window.location.href, {
+                                        headers: {'X-Requested-With': 'XMLHttpRequest'}
+                                    })
+                                        .then(response => response.text())
+                                        .then(html => {
+                                            document.getElementById("table-container").innerHTML = html;
+                                        });
+                                } else {
+                                    Swal.fire({
+                                        icon: 'error',
+                                        title: 'Erro',
+                                        text: data.message,
+                                        confirmButtonText: 'OK'
+                                    });
+                                }
+                            })
+                            .catch(error => {
+                                console.error('Erro ao reemitir ticket:', error);
+                                Swal.fire({
+                                    icon: 'error',
+                                    title: 'Erro Inesperado',
+                                    text: 'Ocorreu um erro inesperado. Tente novamente mais tarde.',
+                                    confirmButtonText: 'OK'
+                                });
+                            });
+                    }
+                });
+            }
+
+            function attachDeleteEvents() {
+                document.querySelectorAll(".delete-form").forEach(form => {
+                    form.addEventListener("submit", function (e) {
+                        e.preventDefault(); // Impede o envio padrão do formulário
+
+                        const row = this.closest("tr"); // Obtém a linha da tabela
+                        const actionUrl = this.action;
+
+                        Swal.fire({
+                            title: 'Confirmar Exclusão?',
+                            text: 'Tem certeza de que deseja excluir este registro? Essa ação não pode ser desfeita.',
+                            icon: 'warning',
+                            showCancelButton: true,
+                            confirmButtonColor: '#d33',
+                            cancelButtonColor: '#6c757d',
+                            confirmButtonText: 'Sim, excluir!',
+                            cancelButtonText: 'Cancelar',
+                            reverseButtons: true
+                        }).then((result) => {
+                            if (result.isConfirmed) {
+                                fetch(actionUrl, {
+                                    method: 'DELETE',
+                                    headers: {
+                                        'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').getAttribute('content'),
+                                        'Accept': 'application/json'
+                                    }
+                                })
+                                    .then(response => response.json())
+                                    .then(data => {
+                                        if (data.success) {
+                                            row.remove();
+                                            Swal.fire({
+                                                icon: 'success',
+                                                title: 'Registro Excluído',
+                                                text: data.message,
+                                                confirmButtonText: 'OK'
+                                            });
+                                        } else {
+                                            Swal.fire({
+                                                icon: 'error',
+                                                title: 'Erro',
+                                                text: data.message || 'Não foi possível excluir o registro.',
+                                                confirmButtonText: 'OK'
+                                            });
+                                        }
+                                    })
+                                    .catch(error => {
+                                        console.error('Erro ao excluir:', error);
+                                        Swal.fire({
+                                            icon: 'error',
+                                            title: 'Erro Inesperado',
+                                            text: 'Ocorreu um erro inesperado. Tente novamente.',
+                                            confirmButtonText: 'OK'
+                                        });
+                                    });
+                            }
+                        });
+                    });
+                });
+            }
+
+            function attachFilterEvents() {
+                document.getElementById('filter-form').addEventListener('submit', async function (e) {
+                    e.preventDefault();
+
+                    const filter = document.getElementById('filter').value.trim();
+
+                    // 🔥 Bloqueia pesquisas com menos de 3 caracteres, exceto quando limpando
+                    if (filter.length > 0 && filter.length < 3) {
+                        Swal.fire({
+                            icon: 'warning',
+                            title: 'Atenção',
+                            text: 'Digite pelo menos 3 caracteres para pesquisar.',
+                            confirmButtonText: 'OK'
+                        });
+                        return;
+                    }
+
+                    try {
+                        const response = await fetch("{{ route('benefit-deliveries.filter') }}?filter=" + encodeURIComponent(filter), {
+                            headers: { 'Accept': 'application/json' }
+                        });
+
+                        if (!response.ok) {
+                            throw new Error("Erro na requisição: " + response.statusText);
+                        }
+
+                        const data = await response.json();
+
+                        if (data.success) {
+                            document.getElementById('deliveries-table-body').innerHTML = data.html;
+
+                            // 🔥 Remove a paginação quando há um filtro ativo
+                            document.getElementById('pagination-links').innerHTML = '';
+
+                            attachDeleteEvents(); // Reanexar eventos de exclusão
+                        } else {
+                            Swal.fire({
+                                icon: 'error',
+                                title: 'Erro',
+                                text: data.message || 'Falha ao filtrar os registros.'
+                            });
+                        }
+                    } catch (error) {
+                        console.error("Erro ao filtrar:", error);
+                        Swal.fire({
+                            icon: 'error',
+                            title: 'Erro',
+                            text: 'Não foi possível carregar os registros filtrados. Tente novamente.',
+                            confirmButtonText: 'OK'
+                        });
+                    }
+                });
+            }
+
+            function attachPaginationEvents() {
+                document.querySelectorAll("#pagination-links a").forEach(link => {
+                    link.addEventListener("click", async function (e) {
+                        e.preventDefault(); // Impede o comportamento padrão
+
+                        let requestUrl = this.href; // Obtém o link correto da página
+
+                        try {
+                            const response = await fetch(requestUrl, { headers: { 'Accept': 'application/json' } });
+
+                            if (!response.ok) {
+                                throw new Error(`Erro na requisição: ${response.status} - ${response.statusText}`);
+                            }
+
+                            const data = await response.json();
+
+                            if (data.success) {
+                                document.getElementById('deliveries-table-body').innerHTML = data.html;
+                                document.getElementById('pagination-links').innerHTML = data.pagination; // Usa a paginação custom
+
+                                attachPaginationEvents(); // Reanexar eventos da paginação
+                                attachDeleteEvents(); // Reanexar eventos de exclusão
+                            } else {
+                                Swal.fire({
+                                    icon: 'error',
+                                    title: 'Erro',
+                                    text: data.message || 'Falha ao carregar a nova página.'
+                                });
+                            }
+                        } catch (error) {
+                            console.error("Erro ao carregar página:", error);
+                            Swal.fire({
+                                icon: 'error',
+                                title: 'Erro',
+                                text: 'Não foi possível carregar a nova página. Tente novamente.',
+                                confirmButtonText: 'OK'
+                            });
+                        }
+                    });
+                });
+            }
+
+            function updateQueryString(key, value) {
+                let url = new URL(window.location.href);
+                if (value) {
+                    url.searchParams.set(key, value);
+                } else {
+                    url.searchParams.delete(key);
+                }
+                return url.toString();
+            }
+
+            function openQuickDeliveryModal() {
+                document.getElementById('quickDeliveryModal').classList.remove('hidden');
+                document.getElementById('quickDeliveryCode').focus();
+            }
+
+            function closeQuickDeliveryModal() {
+                document.getElementById('quickDeliveryModal').classList.add('hidden');
+            }
+
+            async function quickDelivery() {
+                const code = document.getElementById('quickDeliveryCode').value.trim();
+                if (code.length !== 6) {
+                    Swal.fire({ icon: 'warning', title: 'Atenção', text: 'Insira um código de 6 dígitos.', confirmButtonText: 'OK' });
+                    return;
+                }
+
+                try {
+                    const response = await fetch("{{ route('benefit-deliveries.quick-deliver') }}", {
+                        method: 'PATCH',
+                        headers: {
+                            'Content-Type': 'application/json',
+                            'X-CSRF-TOKEN': '{{ csrf_token() }}',
+                            'Accept': 'application/json'
+                        },
+                        body: JSON.stringify({ ticket_code: code })
+                    });
+                    const data = await response.json();
+
+                    if (response.ok && data.success) {
+                        Swal.fire({ icon: 'success', title: 'Baixa Registrada', text: data.message, confirmButtonText: 'OK' })
+                            .then(() => {
+                                document.getElementById("quickDeliveryCode").value = '';
+                                fetch(window.location.href, { headers: { 'X-Requested-With': 'XMLHttpRequest' } })
+                                    .then(response => response.text())
+                                    .then(html => {
+                                        tableContainer.innerHTML = html;
+                                        attachPaginationEvents();
+                                    });
+                            });
+                    } else {
+                        Swal.fire({ icon: 'error', title: 'Erro', text: data.message || 'Falha ao registrar a baixa.', confirmButtonText: 'OK' });
+                    }
+                } catch (error) {
+                    console.error('Erro:', error);
+                    Swal.fire({ icon: 'error', title: 'Erro Inesperado', text: 'Ocorreu um erro inesperado. Tente novamente mais tarde.', confirmButtonText: 'OK' });
+                }
+            }
+
+            // ** Garante que os eventos são reanexados após cada atualização da tabela **
+            document.addEventListener("DOMContentLoaded", function () {
+                if (urlParams.has('filter')) {
+                    filterInput.value = urlParams.get('filter');
+                }
+
+                quickDeliveryInput.addEventListener('keypress', function (e) {
+                    if (e.key === 'Enter') {
+                        e.preventDefault();
+                        const code = quickDeliveryInput.value.trim();
+                        if (code.length === 6) {
+                            quickDelivery(); // Chama a função de baixa rápida
+                        } else {
+                            Swal.fire({
+                                icon: 'warning',
+                                title: 'Atenção',
+                                text: 'Insira um código de 6 dígitos.',
+                                confirmButtonText: 'OK'
+                            });
+                        }
+                    }
+                });
+
+                quickDeliveryInput.addEventListener('keypress', function(e) {
+                    if (e.key === 'Enter') {
+                        e.preventDefault();
+                        quickDelivery();
+                    }
+                });
+
+                attachFilterEvents(); // Chamar a função ao carregar a página
+                attachPaginationEvents(); // Chamar a função ao carregar a página
+                attachDeleteEvents(); // Chama a função ao carregar a página
+            });
         </script>
     @endpush
 </x-app-layout>

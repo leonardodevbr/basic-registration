@@ -14,11 +14,21 @@ use Intervention\Image\ImageManager;
 
 class BenefitDeliveryController extends Controller
 {
-    public function index()
+    public function index(Request $request)
     {
-        $benefitDeliveries = BenefitDelivery::paginate(10);
+        $benefitDeliveries = BenefitDelivery::orderByRaw(
+            "CASE
+        WHEN status = 'REISSUED' THEN 1 ELSE 0 END, id DESC"
+        )
+            ->paginate(10)->withPath(url()->current());
+
+        if ($request->ajax()) {
+            return view('benefit-deliveries.partials.table', compact('benefitDeliveries'))->render();
+        }
+
         return view('benefit-deliveries.index', compact('benefitDeliveries'));
     }
+
 
     public function create()
     {
@@ -34,8 +44,9 @@ class BenefitDeliveryController extends Controller
         $imageData = base64_decode(str_replace('data:image/png;base64,', '', $validated['person']['selfie']));
 
         // Create unique file names
-        $selfieName = 'selfies/' . uniqid() . '.png';
-        $thumbName  = 'selfies/thumbs/' . uniqid() . '.png';
+        $randName = uniqid();
+        $selfieName = 'selfies/'.$randName.'.png';
+        $thumbName = 'selfies/thumbs/'.$randName.'.png';
 
         $manager = new ImageManager(new Driver());
 
@@ -59,29 +70,29 @@ class BenefitDeliveryController extends Controller
 
         // Create Person record
         $person = Person::create([
-            'name'        => $validated['person']['name'],
-            'cpf'         => $validated['person']['cpf'],
-            'phone'       => $validated['person']['phone'] ?? null,
+            'name' => $validated['person']['name'],
+            'cpf' => $validated['person']['cpf'],
+            'phone' => $validated['person']['phone'] ?? null,
             'selfie_path' => $selfieName,
-            'thumb_path'  => $thumbName,
+            'thumb_path' => $thumbName,
         ]);
 
         // Generate a 6-digit password code
-        $passwordCode = random_int(100000, 999999);
+        $ticketCode = random_int(100000, 999999);
 
         // Define validity period (e.g., 1 hour from now)
-        $validUntil = now()->addHour();
+        $validUntil = now()->addWeek();
 
         // Create BenefitDelivery record with new columns
         $benefitDelivery = BenefitDelivery::create([
-            'benefit_id'    => $validated['benefit_id'],
-            'person_id'     => $person->id,
-            'password_code' => $passwordCode,
-            'valid_until'   => $validUntil,
-            'status'        => 'PENDING',
+            'benefit_id' => $validated['benefit_id'],
+            'person_id' => $person->id,
+            'ticket_code' => $ticketCode,
+            'valid_until' => $validUntil,
+            'status' => 'PENDING',
             'registered_by' => auth()->check() ? auth()->user()->id : null,
-            'delivered_at'  => null,
-            'unit_id'       => $validated['unit_id'] ?? null,
+            'delivered_at' => null,
+            'unit_id' => $validated['unit_id'] ?? null,
         ]);
 
         // Return JSON response for AJAX request
@@ -89,10 +100,10 @@ class BenefitDeliveryController extends Controller
             return response()->json([
                 'success' => true,
                 'message' => 'Benefit delivery registered successfully!',
-                'data'    => [
+                'data' => [
                     'benefit_delivery' => $benefitDelivery,
                     'person' => $person,
-                    'password_code' => $passwordCode
+                    'ticket_code' => $ticketCode
                 ],
             ]);
         }
@@ -122,8 +133,9 @@ class BenefitDeliveryController extends Controller
             $imageData = base64_decode(str_replace('data:image/png;base64,', '', $validated['person']['selfie']));
 
             // Criar nomes únicos
-            $selfieName = 'selfies/' . uniqid() . '.png';
-            $thumbName = 'selfies/thumbs/' . uniqid() . '.png';
+            $randName = uniqid();
+            $selfieName = 'selfies/'.$randName.'.png';
+            $thumbName = 'selfies/thumbs/'.$randName.'.png';
 
             // Criar as imagens com Intervention
             $manager = new ImageManager(new Driver());
@@ -171,13 +183,27 @@ class BenefitDeliveryController extends Controller
             'benefit_id' => $validated['benefit_id'],
         ]);
 
-        return redirect()->route('benefit-deliveries.index')->with('success', 'Registro de entrega atualizado com sucesso!');
+        return redirect()->route('benefit-deliveries.index')->with(
+            'success',
+            'Registro de entrega atualizado com sucesso!'
+        );
     }
 
     public function destroy(BenefitDelivery $benefitDelivery)
     {
-        $benefitDelivery->delete();
-        return redirect()->route('benefit-deliveries.index')->with('success', 'Registro de entrega excluído com sucesso!');
+        try {
+            $benefitDelivery->delete();
+
+            return response()->json([
+                'success' => true,
+                'message' => 'Registro excluído com sucesso!'
+            ]);
+        } catch (\Exception $e) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Erro ao excluir: '.$e->getMessage()
+            ], 500);
+        }
     }
 
     public function show(int $benefitDeliveryId)
@@ -196,7 +222,7 @@ class BenefitDeliveryController extends Controller
         }
 
         $benefitDelivery->update([
-            'status'       => 'DELIVERED',
+            'status' => 'DELIVERED',
             'delivered_at' => now(),
             'delivered_by' => auth()->check() ? auth()->user()->id : null,
         ]);
@@ -211,33 +237,34 @@ class BenefitDeliveryController extends Controller
     {
         $filter = $request->get('filter', '');
 
-        $deliveries = BenefitDelivery::with(['person', 'benefit'])
-            ->when($filter, function($query, $filter) {
-                $query->where('password_code', 'like', "%{$filter}%")
+        $benefitDeliveries = BenefitDelivery::with(['person', 'benefit'])
+            ->when($filter, function ($query, $filter) {
+                $query->where('ticket_code', 'like', "%{$filter}%")
                     ->orWhereHas('person', function ($q) use ($filter) {
                         $q->where('cpf', 'like', "%{$filter}%")
                             ->orWhere('name', 'like', "%{$filter}%");
                     });
-            })->paginate(10);
+            })
+            ->orderByRaw("CASE WHEN status = 'REISSUED' THEN 1 ELSE 0 END, id DESC")
+            ->get(); // 🔥 Removemos o `paginate(10)`, agora traz **todos os registros**
 
-        $html = view('benefit-deliveries._table_body', compact('deliveries'))->render();
+        $html = view('benefit-deliveries._table_body', ['deliveries' => $benefitDeliveries])->render();
 
         return response()->json([
             'success' => true,
-            'html'    => $html,
+            'html' => $html
         ]);
     }
-
 
     public function quickDeliver(Request $request)
     {
         $request->validate([
-            'password_code' => 'required|string',
+            'ticket_code' => 'required|string',
         ]);
 
-        $passwordCode = $request->input('password_code');
+        $ticketCode = $request->input('ticket_code');
 
-        $benefitDelivery = BenefitDelivery::where('password_code', $passwordCode)
+        $benefitDelivery = BenefitDelivery::where('ticket_code', $ticketCode)
             ->where('status', 'PENDING')
             ->first();
 
@@ -249,7 +276,7 @@ class BenefitDeliveryController extends Controller
         }
 
         $benefitDelivery->update([
-            'status'       => 'DELIVERED',
+            'status' => 'DELIVERED',
             'delivered_at' => now(),
             'delivered_by' => auth()->check() ? auth()->user()->id : null,
         ]);
@@ -257,6 +284,41 @@ class BenefitDeliveryController extends Controller
         return response()->json([
             'success' => true,
             'message' => 'Baixa realizada com sucesso!'
+        ]);
+    }
+
+    public function reissue($id)
+    {
+        // Encontrar o benefício original
+        $oldBenefit = BenefitDelivery::findOrFail($id);
+
+        // Atualizar o status do antigo registro para "REISSUED"
+        $oldBenefit->update(['status' => 'REISSUED']);
+
+        // Gerar novo ticket
+        $ticketCode = random_int(100000, 999999);
+        $validUntil = now()->addWeek();
+
+        // Criar novo registro usando os dados da pessoa original
+        $newBenefit = BenefitDelivery::create([
+            'benefit_id' => $oldBenefit->benefit_id,
+            'person_id' => $oldBenefit->person_id,
+            'ticket_code' => $ticketCode,
+            'valid_until' => $validUntil,
+            'status' => 'PENDING',
+            'registered_by' => auth()->id(),
+            'unit_id' => $oldBenefit->unit_id,
+            'reissued_from' => $oldBenefit->id, // Relaciona com o registro antigo
+        ]);
+
+        return response()->json([
+            'success' => true,
+            'message' => 'Novo ticket reemitido com sucesso!',
+            'data' => [
+                'benefit_delivery' => $newBenefit,
+                'ticket_code' => $ticketCode,
+                'previous_id' => $oldBenefit->id,
+            ],
         ]);
     }
 

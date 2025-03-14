@@ -17,11 +17,11 @@ use Illuminate\Database\Eloquent\Relations\BelongsTo;
 
 /**
  * Class BenefitDelivery
- * 
+ *
  * @property int $id
  * @property int $benefit_id
  * @property int $person_id
- * @property string $password_code
+ * @property string $ticket_code
  * @property Carbon $valid_until
  * @property string $status
  * @property int|null $registered_by
@@ -30,7 +30,7 @@ use Illuminate\Database\Eloquent\Relations\BelongsTo;
  * @property Carbon|null $delivered_at
  * @property Carbon|null $created_at
  * @property Carbon|null $updated_at
- * 
+ *
  * @property Benefit $benefit
  * @property User|null $user
  * @property Person $person
@@ -56,7 +56,7 @@ class BenefitDelivery extends Model
 	protected $fillable = [
 		'benefit_id',
 		'person_id',
-		'password_code',
+		'ticket_code',
 		'valid_until',
 		'status',
 		'registered_by',

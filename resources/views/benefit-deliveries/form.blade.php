@@ -464,7 +464,7 @@
                         } else {
                             // Em caso de sucesso, exibe a senha em destaque
                             const person = responseData.data.person;
-                            const passwordCode = responseData.data.password_code;
+                            const PicketCode = responseData.data.ticket_code;
 
                             Swal.fire({
                                 icon: 'success',
@@ -472,7 +472,7 @@
                                 html: `
                         <p><strong>Senha:</strong>
                            <span style="font-size: 1.5rem; color: #D35400;">
-                              ${passwordCode}
+                              ${PicketCode}
                            </span>
                         </p>
                         <p><strong>Nome:</strong> ${person.name}</p>
