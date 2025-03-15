@@ -205,7 +205,7 @@ class BenefitDeliveryController extends Controller
 
     public function show(int $benefitDeliveryId)
     {
-        $person = BenefitDelivery::with('person', 'benefit')->find($benefitDeliveryId);
+        $person = BenefitDelivery::with('person', 'benefit', 'registered_by', 'delivered_by')->find($benefitDeliveryId);
         return response()->json($person);
     }
 

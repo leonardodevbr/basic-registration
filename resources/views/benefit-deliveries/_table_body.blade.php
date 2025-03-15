@@ -27,7 +27,7 @@
                 </div>
             </div>
         </td>
-        <td class="py-4 px-2 md:px-6 whitespace-nowrap">
+        <td class="py-4 px-2 md:px-6 whitespace-nowrap hidden md:table-cell">
             <div class="min-w-max">
                 <span>{{ $benefitDelivery->benefit->name }}</span><br>
                 <div class="status-col">
@@ -48,7 +48,7 @@
                 </div>
             </div>
         </td>
-        <td class="py-4 px-2 md:px-6 whitespace-nowrap">
+        <td class="py-4 px-2 md:px-6 whitespace-nowrap hidden md:table-cell">
             <div class="flex min-w-max items-center space-x-1 mt-1">
                 <svg class="w-5 h-5 text-gray-500" fill="none" stroke="currentColor" stroke-width="2"
                      viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
@@ -63,7 +63,7 @@
                 {{ $benefitDelivery->created_at->format('d/m/Y H:i') }}
             </p>
         </td>
-        <td class="py-4 px-2 md:px-6 whitespace-nowrap">
+        <td class="py-4 px-2 md:px-6 whitespace-nowrap hidden md:table-cell">
             @if($benefitDelivery->delivered_at)
                 <div class="flex min-w-max items-center space-x-1 mt-1">
                     <svg class="w-5 h-5 text-gray-500" fill="none" stroke="currentColor" stroke-width="2"
@@ -85,7 +85,7 @@
                 <p class="text-sm text-gray-500 italic">Pendente</p>
             @endif
         </td>
-        <td class="py-4 px-2 md:px-6 whitespace-nowrap">
+        <td class="py-4 pl-2 md:px-6 whitespace-nowrap">
             <div class="hidden md:flex min-w-max items-center space-x-3 justify-end">
                 @if($benefitDelivery->status === 'PENDING')
                     <button type="button"
@@ -117,8 +117,8 @@
             </div>
 
             <!-- Dropdown para Mobile -->
-            <div class=" md:hidden">
-                <button class="dropdown-button bg-gray-200 text-gray-700 px-2 py-1 rounded-md flex items-center">
+            <div class="md:hidden justify-end">
+                <button class="dropdown-button bg-gray-200 text-gray-700 px-2 py-1 rounded-md flex items-center ml-auto">
                     <svg class="w-5 h-5 pointer-events-none" fill="none" stroke="currentColor" stroke-width="2"
                          viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
                         <path stroke-linecap="round" stroke-linejoin="round"

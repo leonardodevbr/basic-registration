@@ -76,6 +76,18 @@
                     </p>
                     <p id="modalBenefit" class="text-sm h-[20px] text-gray-600 bg-gray-200 min-w-[130px] px-4 rounded-md animate-pulse">
                     </p>
+                    <!-- Responsável pelo registro -->
+                    <p id="modalRegisteredBy" class="text-sm h-[20px] text-gray-600 bg-gray-200 min-w-[180px] px-4 rounded-md animate-pulse">
+                    </p>
+                    <p id="modalCreatedAt" class="text-sm h-[20px] text-gray-600 bg-gray-200 min-w-[180px] px-4 rounded-md animate-pulse">
+                    </p>
+
+                    <!-- Responsável pela entrega -->
+                    <p id="modalDeliveredBy" class="text-sm h-[20px] text-gray-600 bg-gray-200 min-w-[180px] px-4 rounded-md animate-pulse">
+                    </p>
+                    <p id="modalDeliveredAt" class="text-sm h-[20px] text-gray-600 bg-gray-200 min-w-[180px] px-4 rounded-md animate-pulse">
+                    </p>
+
                 </div>
             </div>
 
@@ -105,9 +117,10 @@
                 modal.classList.remove("hidden");
                 modalImage.src = placeholder;
 
-                // Adiciona a classe de animação para placeholders
+                // Lista de placeholders com animação inicial
                 const placeholders = [
-                    "modalName", "modalTicketCode", "modalCpf", "modalPhone", "modalBenefit", "modalStatus"
+                    "modalName", "modalTicketCode", "modalCpf", "modalPhone", "modalBenefit", "modalStatus",
+                    "modalRegisteredBy", "modalCreatedAt", "modalDeliveredBy", "modalDeliveredAt"
                 ];
 
                 placeholders.forEach(id => {
@@ -130,23 +143,45 @@
                             modalImage.src = placeholder;
                         };
 
-                        // Remove efeito de carregamento e atualiza os dados
+                        // Preenchendo os dados principais
                         updateModalField("modalName", data.person.name);
                         updateModalField("modalTicketCode", data.ticket_code, "text-blue-600 font-semibold");
                         updateModalField("modalCpf", "<b>CPF:</b> " + formatCPF(data.person.cpf), "", true);
                         updateModalField("modalPhone", "<b>Telefone:</b> " + formatPhone(data.person.phone ?? ''), "", true);
                         updateModalField("modalBenefit", "<b>Benefício:</b> " + data.benefit.name, "", true);
 
-                        // 🔹 Resetando classes do status antes de adicionar novas 🔹
+                        // 🔹 Atualizando status 🔹
                         const statusElement = document.getElementById("modalStatus");
-                        statusElement.className = "text-xs h-[20px] min-w-[70px] font-medium px-3 rounded-full"; // Reseta classes base
+                        statusElement.className = "text-xs h-[20px] min-w-[70px] font-medium px-3 rounded-full"; // Resetando classes
                         statusElement.innerText = translateStatus(data.status);
-                        statusElement.classList.add(...getStatusBadge(data.status).split(" ")); // Adiciona as classes corretas
+                        statusElement.classList.add(...getStatusBadge(data.status).split(" "));
+
+                        // 🔹 Exibir dados extras apenas no mobile 🔹
+                        if (window.innerWidth < 768) {  // Se a tela for menor que 768px (mobile)
+                            updateModalField("modalRegisteredBy", `<b>Registrado por:</b> ${data.registered_by.name ?? 'Não informado'}`, "", true);
+                            updateModalField("modalCreatedAt", `<b>Data de criação:</b> ${formatDateTime(data.created_at)}`, "", true);
+
+                            if (data.delivered_at) {
+                                updateModalField("modalDeliveredBy", `<b>Entregue por:</b> ${data.delivered_by.name ?? 'Não informado'}`, "", true);
+                                updateModalField("modalDeliveredAt", `<b>Data de entrega:</b> ${formatDateTime(data.delivered_at)}`, "", true);
+                            } else if (data.status === "EXPIRED") {
+                                updateModalField("modalDeliveredAt", `<span class="text-red-500 italic">Expirado em ${formatDateTime(data.valid_until)}</span>`, "", true);
+                            } else {
+                                updateModalField("modalDeliveredAt", `<span class="text-gray-500 italic">Pendente</span>`, "", true);
+                            }
+                        }
                     })
                     .catch(error => {
                         console.error("Erro ao carregar os detalhes:", error);
                         alert("Erro ao carregar os detalhes. Tente novamente.");
                     });
+            }
+
+            // 🔹 Função auxiliar para formatar data e hora 🔹
+            function formatDateTime(dateTime) {
+                if (!dateTime) return "Não informado";
+                const date = new Date(dateTime);
+                return date.toLocaleString("pt-BR", { day: "2-digit", month: "2-digit", year: "numeric", hour: "2-digit", minute: "2-digit" });
             }
 
             // Atualiza os campos do modal removendo os placeholders
@@ -586,7 +621,6 @@
                     let pressTimer;
 
                     row.addEventListener("touchstart", function (e) {
-                        e.preventDefault();
                         if (e.target.classList.contains("dropdown-button")) {
                             toggleDropdown(e.target);
                             return;

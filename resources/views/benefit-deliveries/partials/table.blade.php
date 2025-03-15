@@ -4,9 +4,9 @@
             <thead class="bg-gray-50">
             <tr>
                 <th class="py-3 px-2 md:px-6 text-left">Pessoa</th>
-                <th class="py-3 px-2 md:px-6 text-left">Benefício</th>
-                <th class="py-3 px-2 md:px-6 text-left">Registro</th>
-                <th class="py-3 px-2 md:px-6 text-left">Entrega</th>
+                <th class="py-3 px-2 md:px-6 text-left hidden md:table-cell">Benefício</th>
+                <th class="py-3 px-2 md:px-6 text-left hidden md:table-cell">Registro</th>
+                <th class="py-3 px-2 md:px-6 text-left hidden md:table-cell">Entrega</th>
                 <th class="py-3 px-2 md:px-6 text-right">Ações</th>
             </tr>
             </thead>
