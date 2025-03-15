@@ -4,11 +4,13 @@ namespace App\Http\Controllers;
 
 use App\Http\Requests\BenefitDeliveryStoreRequest;
 use App\Http\Requests\BenefitDeliveryUpdateRequest;
+use App\Jobs\ProcessSelfieImage;
 use App\Models\Base\Benefit;
 use App\Models\Base\BenefitDelivery;
 use App\Models\Person;
 use Google\Cloud\Storage\StorageClient;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Cache;
 use Intervention\Image\Drivers\Gd\Driver;
 use Intervention\Image\ImageManager;
 
@@ -70,29 +72,19 @@ class BenefitDeliveryController extends Controller
             ]);
         }
 
-        // 🔹 Se veio selfie nova, processa e armazena
+        // 🔹 Se veio selfie nova, salva a imagem temporariamente e envia para processamento
         if (!empty($inputData['person']['selfie'])) {
-            $imageData = base64_decode(str_replace('data:image/png;base64,', '', $inputData['person']['selfie']));
-            $randName = uniqid();
-            $selfieName = 'selfies/' . $randName . '.png';
-            $thumbName = 'selfies/thumbs/' . $randName . '.png';
+            // Remove o prefixo do Base64
+            $base64Image = str_replace('data:image/png;base64,', '', $inputData['person']['selfie']);
 
-            $manager = new ImageManager(new Driver());
-            $imageFull = $manager->read($imageData)->cover(500, 500)->encode();
-            $imageThumb = $manager->read($imageData)->cover(150, 150)->encode();
+            // Gerar um identificador único para a imagem
+            $cacheKey = 'selfie_' . uniqid('selfie_', true);
 
-            $storage = new StorageClient(['keyFilePath' => env('GOOGLE_CLOUD_KEY_FILE_PATH')]);
-            $bucket = $storage->bucket(env('GOOGLE_CLOUD_STORAGE_BUCKET'));
+            // Armazena a imagem no cache (expira em 10 minutos para evitar acúmulo)
+            Cache::put($cacheKey, $base64Image, now()->addMinutes(10));
 
-            // Upload das imagens no Cloud Storage
-            $bucket->upload($imageFull, ['name' => $selfieName]);
-            $bucket->upload($imageThumb, ['name' => $thumbName]);
-
-            // Atualiza os caminhos da selfie na pessoa
-            $person->update([
-                'selfie_path' => $selfieName,
-                'thumb_path' => $thumbName,
-            ]);
+            // Chama o job passando apenas a chave do cache
+            ProcessSelfieImage::dispatchAfterResponse($cacheKey, $person->id);
         }
 
         // 🔹 Gerar código do ticket e definir validade
@@ -135,9 +127,9 @@ class BenefitDeliveryController extends Controller
 
         // 🔹 1️⃣ Impedir atualização se já existir esse benefício para essa pessoa com status PENDENTE ou ENTREGUE
         $existingBenefit = BenefitDelivery::where('person_id', $person->id)
-            ->where('benefit_id', $inputData['benefit_id']) // ✅ Apenas para o mesmo benefício
-            ->whereIn('status', ['PENDING', 'DELIVERED']) // ✅ Apenas se estiver pendente ou entregue
-            ->where('id', '!=', $benefitDelivery->id) // ✅ Ignora o próprio benefício que está sendo atualizado
+            ->where('benefit_id', $inputData['benefit_id'])
+            ->whereIn('status', ['PENDING', 'DELIVERED'])
+            ->where('id', '!=', $benefitDelivery->id)
             ->exists();
 
         if ($existingBenefit) {
@@ -147,7 +139,7 @@ class BenefitDeliveryController extends Controller
             ], 422);
         }
 
-        // 🔹 2️⃣ Atualizar os dados da pessoa (mas mantém o CPF)
+        // 🔹 2️⃣ Atualizar os dados da pessoa (exceto CPF)
         $person->update([
             'name' => $inputData['person']['name'],
             'phone' => $inputData['person']['phone'] ?? $person->phone,
@@ -155,34 +147,26 @@ class BenefitDeliveryController extends Controller
 
         // 🔹 3️⃣ Processar selfie nova apenas se foi enviada
         if (!empty($inputData['person']['selfie'])) {
-            $imageData = base64_decode(str_replace('data:image/png;base64,', '', $inputData['person']['selfie']));
-            $randName = uniqid();
-            $selfieName = 'selfies/' . $randName . '.png';
-            $thumbName = 'selfies/thumbs/' . $randName . '.png';
+            // Remove o prefixo do Base64
+            $base64Image = str_replace('data:image/png;base64,', '', $inputData['person']['selfie']);
 
-            $manager = new ImageManager(new Driver());
-            $imageFull = $manager->read($imageData)->cover(500, 500)->encode();
-            $imageThumb = $manager->read($imageData)->cover(150, 150)->encode();
+            // Gerar um identificador único para a imagem
+            $cacheKey = 'selfie_' . uniqid('selfie_', true);
 
-            $storage = new StorageClient(['keyFilePath' => env('GOOGLE_CLOUD_KEY_FILE_PATH')]);
-            $bucket = $storage->bucket(env('GOOGLE_CLOUD_STORAGE_BUCKET'));
+            // 🔥 Salvar a imagem no cache com expiração de 10 minutos
+            Cache::put($cacheKey, $base64Image, now()->addMinutes(10));
 
-            // 🔹 Remove imagens antigas antes de fazer upload das novas
-            if (!empty($person->selfie_path)) {
-                $bucket->object($person->selfie_path)->delete();
-            }
-            if (!empty($person->thumb_path)) {
-                $bucket->object($person->thumb_path)->delete();
-            }
+            // 🔹 Chama o job, enviando também as imagens antigas para remoção
+            ProcessSelfieImage::dispatchAfterResponse(
+                $cacheKey,
+                $person->id,
+                $person->selfie_path, // Selfie antiga
+                $person->thumb_path   // Thumbnail antiga
+            );
 
-            // Upload das novas imagens
-            $bucket->upload($imageFull, ['name' => $selfieName]);
-            $bucket->upload($imageThumb, ['name' => $thumbName]);
-
-            // Atualiza os caminhos da selfie na pessoa
             $person->update([
-                'selfie_path' => $selfieName,
-                'thumb_path' => $thumbName,
+                'selfie_path' => "",
+                'thumb_path' => "",
             ]);
         }
 
@@ -201,7 +185,6 @@ class BenefitDeliveryController extends Controller
             ],
         ]);
     }
-
 
     public function destroy(BenefitDelivery $benefitDelivery)
     {

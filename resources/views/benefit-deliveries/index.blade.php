@@ -585,29 +585,28 @@
                 document.querySelectorAll("tr").forEach(row => {
                     let pressTimer;
 
-                    row.addEventListener("mousedown", function (e) {
-                        const dropdownButton = row.querySelector(".dropdown-button");
-
-                        // Se o clique foi diretamente no botão, ignora o press longo
+                    row.addEventListener("touchstart", function (e) {
+                        e.preventDefault();
                         if (e.target.classList.contains("dropdown-button")) {
-                            toggleDropdown(dropdownButton);
+                            toggleDropdown(e.target);
                             return;
                         }
 
                         // Inicia o temporizador para detectar um press longo
                         pressTimer = setTimeout(() => {
+                            const dropdownButton = row.querySelector(".dropdown-button");
                             if (dropdownButton) {
                                 toggleDropdown(dropdownButton);
                             }
                         }, 300); // Tempo de pressão longa
                     });
 
-                    row.addEventListener("mouseup", function () {
+                    row.addEventListener("touchend", function () {
                         clearTimeout(pressTimer);
                     });
 
-                    row.addEventListener("mouseleave", function () {
-                        clearTimeout(pressTimer);
+                    row.addEventListener("touchmove", function () {
+                        clearTimeout(pressTimer); // Cancela o evento se o usuário deslizar o dedo
                     });
                 });
 

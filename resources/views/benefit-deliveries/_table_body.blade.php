@@ -117,7 +117,7 @@
             </div>
 
             <!-- Dropdown para Mobile -->
-            <div class="relative md:hidden">
+            <div class=" md:hidden">
                 <button class="dropdown-button bg-gray-200 text-gray-700 px-2 py-1 rounded-md flex items-center">
                     <svg class="w-5 h-5 pointer-events-none" fill="none" stroke="currentColor" stroke-width="2"
                          viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
@@ -126,7 +126,7 @@
                     </svg>
                 </button>
 
-                <div class="hidden dropdown-actions absolute right-0 mt-2 bg-white shadow-lg border rounded-md w-32 z-10">
+                <div class="hidden dropdown-actions absolute right-5 mt-2 bg-white shadow-lg border rounded-md w-32 z-10">
                     @if($benefitDelivery->status === 'PENDING')
                         <button type="button"
                                 class="block w-full text-left px-4 py-2 text-sm text-gray-700 hover:bg-gray-100"
