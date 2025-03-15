@@ -220,8 +220,10 @@
                 });
             }
 
-            async function buscarPessoa(filtro) {
-                const token = await obterToken();
+            async function buscarPessoa(filtro, tentativa = 1) {
+                const MAX_TENTATIVAS = 2; // Evita loop infinito
+                let token = await obterToken();
+
                 if (!token) {
                     loadingOverlay.classList.add("hidden");
                     return console.error("Autenticação falhou.");
@@ -239,6 +241,20 @@
                     }
                 })
                     .then(response => {
+                        if (response.status === 401 && tentativa < MAX_TENTATIVAS) {
+                            console.warn("Token expirado. Tentando renovar...");
+
+                            // 🔹 Limpa o localStorage e tenta obter um novo token 🔹
+                            localStorage.removeItem("authToken");
+                            return obterToken().then(novoToken => {
+                                if (novoToken) {
+                                    return buscarPessoa(filtro, tentativa + 1);
+                                } else {
+                                    throw new Error("Falha ao renovar o token.");
+                                }
+                            });
+                        }
+
                         if (!response.ok) throw new Error("Pessoa não encontrada");
                         return response.json();
                     })
@@ -274,6 +290,7 @@
                         });
                     });
             }
+
 
             function exibirResultados(pessoas) {
                 const resultTable = document.getElementById("resultTable");
