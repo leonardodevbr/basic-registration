@@ -4,6 +4,7 @@ use App\Http\Controllers\ProfileController;
 use Illuminate\Support\Facades\Route;
 use App\Http\Controllers\BenefitDeliveryController;
 use App\Http\Controllers\DashboardController;
+use App\Http\Controllers\PersonController;
 
 Route::get('/', fn() => redirect()->route('dashboard'))->middleware('auth');
 
@@ -20,6 +21,9 @@ Route::middleware(['auth'])->group(function () {
     Route::patch('/profile', [ProfileController::class, 'update'])->name('profile.update');
     Route::delete('/profile', [ProfileController::class, 'destroy'])->name('profile.destroy');
 
+    Route::group(['prefix' => 'api'], function ($route){
+        $route->get('/buscar-pessoa', [PersonController::class, 'buscar'])->name('api.buscar-pessoa');
+    });
 });
 
 require __DIR__.'/auth.php';

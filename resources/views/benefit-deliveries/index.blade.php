@@ -59,35 +59,31 @@
             <div id="modal-content" class="text-center">
                 <!-- Placeholder da imagem -->
                 <div class="flex justify-center">
-                    <img id="modalImage" class="h-32 shadow rounded-full mx-auto mb-4 bg-gray-200" src="/placeholder.png" alt="Selfie">
+                    <img id="modalImage" class="h-[160px] shadow rounded-full mx-auto mb-4 bg-gray-200" src="/placeholder.png" alt="Selfie">
                 </div>
 
                 <!-- Informações do beneficiário -->
                 <div class="flex flex-col items-center space-y-2">
-                    <p id="modalName" class="text-lg h-[28px] font-bold text-gray-900 bg-gray-200 min-w-[230px] px-4 rounded-md animate-pulse">
-                    </p>
-                    <p id="modalTicketCode" class="text-lg h-[32px] font-semibold text-blue-600 bg-gray-200 min-w-[100px] px-4 rounded-md animate-pulse">
-                    </p>
-                    <span id="modalStatus" class="text-xs h-[20px] font-medium px-3 rounded-full bg-gray-300 text-gray-800 animate-pulse min-w-[70px]">
-                    </span>
-                    <p id="modalCpf" class="text-sm h-[20px] text-gray-600 bg-gray-200 min-w-[120px] px-4 rounded-md animate-pulse">
-                    </p>
-                    <p id="modalPhone" class="text-sm h-[20px] text-gray-600 bg-gray-200 min-w-[140px] px-4 rounded-md animate-pulse">
-                    </p>
-                    <p id="modalBenefit" class="text-sm h-[20px] text-gray-600 bg-gray-200 min-w-[130px] px-4 rounded-md animate-pulse">
-                    </p>
-                    <!-- Responsável pelo registro -->
-                    <p id="modalRegisteredBy" class="text-sm h-[20px] text-gray-600 bg-gray-200 min-w-[180px] px-4 rounded-md animate-pulse">
-                    </p>
-                    <p id="modalCreatedAt" class="text-sm h-[20px] text-gray-600 bg-gray-200 min-w-[180px] px-4 rounded-md animate-pulse">
-                    </p>
+                    <p id="modalName" class="text-lg min-h-[28px] font-bold text-gray-900 bg-gray-200 min-w-[230px] px-4 rounded-md animate-pulse"></p>
+                    <p id="modalTicketCode" class="text-lg h-[32px] font-semibold text-blue-600 bg-gray-200 min-w-[100px] px-4 rounded-md animate-pulse"></p>
+                    <span id="modalStatus" class="text-xs h-[20px] font-medium px-3 rounded-full bg-gray-300 text-gray-800 animate-pulse min-w-[70px]"></span>
+                    <p id="modalCpf" class="text-sm h-[20px] text-gray-600 bg-gray-200 min-w-[120px] px-4 rounded-md animate-pulse"></p>
+                    <p id="modalPhone" class="text-sm h-[20px] text-gray-600 bg-gray-200 min-w-[140px] px-4 rounded-md animate-pulse"></p>
+                    <p id="modalBenefit" class="text-sm h-[20px] text-gray-600 bg-gray-200 min-w-[130px] px-4 rounded-md animate-pulse"></p>
 
-                    <!-- Responsável pela entrega -->
-                    <p id="modalDeliveredBy" class="text-sm h-[20px] text-gray-600 bg-gray-200 min-w-[180px] px-4 rounded-md animate-pulse">
-                    </p>
-                    <p id="modalDeliveredAt" class="text-sm h-[20px] text-gray-600 bg-gray-200 min-w-[180px] px-4 rounded-md animate-pulse">
-                    </p>
+                    <!-- Dados de Registro -->
+                    <div id="modalRegisteredSection" class="hidden flex flex-col items-center text-gray-500 text-xs mt-2">
+                        <small>Registro</small>
+                        <p id="modalRegisteredBy" class="text-sm font-semibold text-gray-700"></p>
+                        <p id="modalCreatedAt" class="text-xs"></p>
+                    </div>
 
+                    <!-- Dados de Entrega -->
+                    <div id="modalDeliveredSection" class="hidden flex flex-col items-center text-gray-500 text-xs mt-2">
+                        <small>Entrega</small>
+                        <p id="modalDeliveredBy" class="text-sm font-semibold text-gray-700"></p>
+                        <p id="modalDeliveredAt" class="text-xs"></p>
+                    </div>
                 </div>
             </div>
 
@@ -99,7 +95,13 @@
         </div>
     </div>
 
-
+    <!-- Modal para exibir a imagem em tamanho maior -->
+    <div id="imageModal" class="fixed px-1 inset-0 flex items-center justify-center bg-black bg-opacity-75 hidden">
+        <div class="relative">
+            <button onclick="closeImageModal()" class="absolute shadow-md top-2 right-2 bg-red-500 text-white text-2xl font-bold w-8 h-8 rounded-full hover:bg-red-100">&times;</button>
+            <img id="imageModalContent" class="max-w-full max-h-screen mx-auto rounded-md" alt="Imagem Ampliada">
+        </div>
+    </div>
 @push('scripts')
         <script>
             const filterInput = document.getElementById("filter");
@@ -117,10 +119,9 @@
                 modal.classList.remove("hidden");
                 modalImage.src = placeholder;
 
-                // Lista de placeholders com animação inicial
+                // Lista de placeholders
                 const placeholders = [
-                    "modalName", "modalTicketCode", "modalCpf", "modalPhone", "modalBenefit", "modalStatus",
-                    "modalRegisteredBy", "modalCreatedAt", "modalDeliveredBy", "modalDeliveredAt"
+                    "modalName", "modalTicketCode", "modalCpf", "modalPhone", "modalBenefit", "modalStatus"
                 ];
 
                 placeholders.forEach(id => {
@@ -128,6 +129,10 @@
                     element.innerText = "";
                     element.classList.add("animate-pulse", "bg-gray-200");
                 });
+
+                // Ocultar seções de registro e entrega até que sejam preenchidas
+                document.getElementById("modalRegisteredSection").classList.add("hidden");
+                document.getElementById("modalDeliveredSection").classList.add("hidden");
 
                 fetch(`/benefit-deliveries/${benefitDeliveryId}`)
                     .then(response => response.json())
@@ -152,29 +157,48 @@
 
                         // 🔹 Atualizando status 🔹
                         const statusElement = document.getElementById("modalStatus");
-                        statusElement.className = "text-xs h-[20px] min-w-[70px] font-medium px-3 rounded-full"; // Resetando classes
+                        statusElement.className = "text-xs h-[20px] min-w-[70px] font-medium px-3 rounded-full";
                         statusElement.innerText = translateStatus(data.status);
                         statusElement.classList.add(...getStatusBadge(data.status).split(" "));
 
                         // 🔹 Exibir dados extras apenas no mobile 🔹
-                        if (window.innerWidth < 768) {  // Se a tela for menor que 768px (mobile)
-                            updateModalField("modalRegisteredBy", `<b>Registrado por:</b> ${data.registered_by.name ?? 'Não informado'}`, "", true);
-                            updateModalField("modalCreatedAt", `<b>Data de criação:</b> ${formatDateTime(data.created_at)}`, "", true);
+                        if (window.innerWidth < 768) {
+                            if (data.registered_by) {
+                                updateModalField("modalRegisteredBy", data.registered_by.name ?? 'Não informado');
+                                updateModalField("modalCreatedAt", formatDateTime(data.created_at));
+                                document.getElementById("modalRegisteredSection").classList.remove("hidden");
+                            }
 
                             if (data.delivered_at) {
-                                updateModalField("modalDeliveredBy", `<b>Entregue por:</b> ${data.delivered_by.name ?? 'Não informado'}`, "", true);
-                                updateModalField("modalDeliveredAt", `<b>Data de entrega:</b> ${formatDateTime(data.delivered_at)}`, "", true);
-                            } else if (data.status === "EXPIRED") {
-                                updateModalField("modalDeliveredAt", `<span class="text-red-500 italic">Expirado em ${formatDateTime(data.valid_until)}</span>`, "", true);
-                            } else {
-                                updateModalField("modalDeliveredAt", `<span class="text-gray-500 italic">Pendente</span>`, "", true);
+                                updateModalField("modalDeliveredBy", data.delivered_by?.name ?? 'Não informado');
+                                updateModalField("modalDeliveredAt", formatDateTime(data.delivered_at));
+                                document.getElementById("modalDeliveredSection").classList.remove("hidden");
                             }
                         }
+
+                        // 🔹 Evento de clique para abrir a imagem em tamanho maior 🔹
+                        modalImage.onclick = function () {
+                            openImageModal(data.person.selfie_url);
+                        };
                     })
                     .catch(error => {
                         console.error("Erro ao carregar os detalhes:", error);
                         alert("Erro ao carregar os detalhes. Tente novamente.");
                     });
+            }
+
+            // 🔹 Função para abrir a imagem expandida 🔹
+            function openImageModal(imageUrl) {
+                const imageModal = document.getElementById("imageModal");
+                const imageModalContent = document.getElementById("imageModalContent");
+
+                imageModalContent.src = imageUrl;
+                imageModal.classList.remove("hidden");
+            }
+
+            // 🔹 Função para fechar o modal da imagem 🔹
+            function closeImageModal() {
+                document.getElementById("imageModal").classList.add("hidden");
             }
 
             // 🔹 Função auxiliar para formatar data e hora 🔹
@@ -215,7 +239,12 @@
                 placeholders.forEach(id => {
                     const element = document.getElementById(id);
                     element.innerText = "";
-                    element.className = "text-sm h-[20px] text-gray-600 bg-gray-200 min-w-[120px] px-4 rounded-md animate-pulse";
+
+                    // Remove classes antigas antes de adicionar novas
+                    element.classList.remove("bg-gray-200", "rounded-md", "animate-pulse");
+
+                    // Adiciona classes corretamente separadas
+                    element.classList.add("bg-gray-200", "rounded-md", "animate-pulse");
                 });
 
                 // 🔹 Resetando especificamente o status para evitar cor errada
@@ -223,7 +252,6 @@
                 statusElement.innerText = "";
                 statusElement.className = "text-xs h-[20px] min-w-[70px] font-medium px-3 rounded-full bg-gray-300 text-gray-800 animate-pulse";
             }
-
 
             // Formatar CPF
             function formatCPF(cpf) {

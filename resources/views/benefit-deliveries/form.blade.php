@@ -220,49 +220,19 @@
                 });
             }
 
-            async function buscarPessoa(filtro, tentativa = 1) {
-                const MAX_TENTATIVAS = 2; // Evita loop infinito
-                let token = await obterToken();
-
-                if (!token) {
-                    loadingOverlay.classList.add("hidden");
-                    return console.error("Autenticação falhou.");
-                }
-
-                let queryParam = (/^\d{11}$/.test(filtro.replace(/\D/g, '')))
-                    ? `cpf=${filtro.replace(/\D/g, "")}`
-                    : `nome=${encodeURIComponent(filtro)}`;
-
-                fetch(`{{env('SIGVSA_API_BASE_URL')}}/pessoas?${queryParam}`, {
-                    method: "GET",
-                    headers: {
-                        "Authorization": `Bearer ${token}`,
-                        "Accept": "application/json"
-                    }
-                })
+            async function buscarPessoa(filtro, summarize = false) {
+                loadingOverlay.classList.remove("hidden");
+                let fullUrl = `/api/buscar-pessoa?filtro=${encodeURIComponent(filtro)}`;
+                fetch(fullUrl)
                     .then(response => {
-                        if (response.status === 401 && tentativa < MAX_TENTATIVAS) {
-                            console.warn("Token expirado. Tentando renovar...");
-
-                            // 🔹 Limpa o localStorage e tenta obter um novo token 🔹
-                            localStorage.removeItem("authToken");
-                            return obterToken().then(novoToken => {
-                                if (novoToken) {
-                                    return buscarPessoa(filtro, tentativa + 1);
-                                } else {
-                                    throw new Error("Falha ao renovar o token.");
-                                }
-                            });
-                        }
-
-                        if (!response.ok) throw new Error("Pessoa não encontrada");
+                        if (!response.ok) throw new Error("Nenhuma pessoa encontrada");
                         return response.json();
                     })
                     .then(data => {
-                        loadingOverlay.classList.add("hidden"); // Esconde overlay
+                        loadingOverlay.classList.add("hidden");
 
                         if (data.length === 1) {
-                            preencherFormulario(data[0]); // Preenche automaticamente se só houver 1 resultado
+                            preencherFormulario(data[0]);
                             searchModal.classList.add("hidden");
                         } else if (data.length > 1) {
                             exibirResultados(data);
@@ -271,22 +241,18 @@
                         }
                     })
                     .catch(error => {
-                        loadingOverlay.classList.add("hidden"); // Esconde overlay
+                        loadingOverlay.classList.add("hidden");
                         console.error("Erro ao buscar pessoa:", error);
 
                         Swal.fire({
                             title: 'Atenção!',
                             text: "Nenhum registro encontrado para essa pesquisa. Solicite os dados para o cadastro.",
                             icon: 'info',
-                            showCancelButton: false,
                             confirmButtonColor: '#3085d6',
-                            cancelButtonColor: '#d33',
                             confirmButtonText: 'Ok'
-                        }).then((result) => {
-                            if (result.isConfirmed) {
-                                cpfInput.focus();
-                                searchModal.classList.add("hidden");
-                            }
+                        }).then(() => {
+                            cpfInput.focus();
+                            searchModal.classList.add("hidden");
                         });
                     });
             }
