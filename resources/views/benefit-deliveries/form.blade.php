@@ -228,7 +228,7 @@
                 }
 
                 let queryParam = (/^\d{11}$/.test(filtro.replace(/\D/g, '')))
-                    ? `cpf=${filtro}`
+                    ? `cpf=${filtro.replace(/\D/g, "")}`
                     : `nome=${encodeURIComponent(filtro)}`;
 
                 fetch(`{{env('SIGVSA_API_BASE_URL')}}/pessoas?${queryParam}`, {
@@ -291,11 +291,11 @@
                         let row = document.createElement("tr");
                         row.innerHTML = `
                 <td class="border border-gray-300 p-2">
-                    <span class="font-semibold">${pessoa.nome}</span><br>
-                    <span class="text-sm text-gray-500">${pessoa.cpf}</span>
+                    <span class="font-semibold">${pessoa.nom_pessoa}</span><br>
+                    <span class="text-sm text-gray-500">${formatCPF(pessoa.num_cpf_pessoa) || 'Sem CPF'}</span>
                 </td>
                 <td class="border border-gray-300 p-2 text-center">
-                    <button class="select-btn bg-[cadetblue] text-white px-2 py-1 text-xs rounded" data-id="${pessoa.cpf}">
+                    <button class="select-btn bg-[cadetblue] text-white px-2 py-1 text-xs rounded" data-id="${pessoa.num_cpf_pessoa || pessoa.num_nis_pessoa_atual}">
                         Selecionar
                     </button>
                 </td>
@@ -306,8 +306,8 @@
                     // Adiciona evento aos botões "Selecionar"
                     document.querySelectorAll(".select-btn").forEach(button => {
                         button.addEventListener("click", function () {
-                            const cpf = this.getAttribute("data-id");
-                            const pessoaSelecionada = pessoas.find(p => p.cpf === cpf);
+                            const dataId = this.getAttribute("data-id");
+                            const pessoaSelecionada = pessoas.find(p => (p.num_cpf_pessoa === dataId || p.num_nis_pessoa_atual === dataId));
                             preencherFormulario(pessoaSelecionada);
                             searchModal.classList.add("hidden");
                         });
@@ -354,16 +354,17 @@
                 renderizarTabela();
             }
 
-
-
             function preencherFormulario(pessoa) {
-                cpfInput.value = pessoa.cpf || "";
-                nomeInput.value = pessoa.nome || "";
-                telefoneInput.value = pessoa.telefone || "";
+                cpfInput.value = formatCPF(pessoa.num_cpf_pessoa) || "";
+                nomeInput.value = pessoa.nom_pessoa || "";
+                telefoneInput.value = formatPhone(pessoa.familia?.num_ddd_contato_1_fam+pessoa.familia?.num_tel_contato_1_fam) || "";
             }
 
             // Formatar CPF
             function formatCPF(cpf) {
+                if(cpf === null || cpf === undefined || cpf === ""){
+                    return '';
+                }
                 return cpf.replace(/^(\d{3})(\d{3})(\d{3})(\d{2})$/, "$1.$2.$3-$4");
             }
 
@@ -509,7 +510,7 @@
                         <span style="font-size: 2rem; color: #D35400;">${TicketCode}</span>
                     </div>
                     <p><strong>Nome:</strong> ${person.name}</p>
-                    <p><strong>CPF:</strong> ${formatCPF(person.cpf)}</p>
+                    <p><strong>CPF:</strong> ${formatCPF(person.cpf) || "Sem CPF"}</p>
                     ${ person.phone ? `<p><strong>Telefone:</strong> ${formatPhone(person.phone)}</p>` : '' }`,
                                 confirmButtonText: 'OK'
                             }).then((result) => {
