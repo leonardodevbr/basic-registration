@@ -49,3 +49,25 @@
     height: 100%;
     pointer-events: none; /* Impede que o canvas bloqueie cliques no vídeo */
 }
+
+.tooltip {
+    position: absolute;
+    bottom: -30px; /* Ajuste para exibição abaixo do ícone */
+    left: 80%;
+    transform: translateX(-80%);
+    background-color: rgba(0, 0, 0, 0.75);
+    color: white;
+    font-size: 12px;
+    padding: 4px 8px;
+    border-radius: 4px;
+    opacity: 0;
+    visibility: hidden;
+    transition: opacity 0.2s ease-in-out, visibility 0.2s ease-in-out;
+    white-space: nowrap;
+}
+
+/* Exibir tooltip ao passar o mouse */
+.group:hover .tooltip {
+    opacity: 1;
+    visibility: visible;
+}

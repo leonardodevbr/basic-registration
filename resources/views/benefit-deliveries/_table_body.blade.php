@@ -1,18 +1,38 @@
 @foreach($deliveries as $benefitDelivery)
     <tr class="border-b hover:bg-gray-50" data-code="{{ $benefitDelivery->ticket_code }}">
         <td class="py-4 pr-2 md:px-6 whitespace-nowrap cursor-pointer">
-            <div class="flex min-w-max items-center space-x-4" onclick="openModal('{{ $benefitDelivery->id }}')">
-                @if($benefitDelivery->person->selfie_path)
-                    <img src="{{ $benefitDelivery->person->thumb_url }}"
-                         alt="Selfie"
-                         loading="lazy"
-                         class="w-16 h-16 rounded-full object-cover shadow">
-                @else
-                    <img src="{{ asset('placeholder.png')}}"
-                         alt="Selfie"
-                         loading="lazy"
-                         class="w-16 h-16 rounded-full object-cover shadow">
-                @endif
+            <div class="flex min-w-max items-center space-x-4 relative" onclick="openModal('{{ $benefitDelivery->id }}')">
+                <div class="relative">
+                    @if($benefitDelivery->person->selfie_path)
+                        <img src="{{ $benefitDelivery->person->thumb_url }}"
+                             alt="Selfie"
+                             loading="lazy"
+                             class="w-16 h-16 rounded-full object-cover shadow">
+                    @else
+                        <img src="{{ asset('placeholder.png') }}"
+                             alt="Selfie"
+                             loading="lazy"
+                             class="w-16 h-16 rounded-full object-cover shadow">
+                    @endif
+
+                    <!-- Badge de status (só aparece no mobile) -->
+                    <span class="md:hidden absolute bottom-0 right-0 text-[10px] font-semibold px-2 py-0.5 rounded-full shadow
+                    @switch($benefitDelivery->status)
+                        @case('PENDING') bg-blue-100 text-blue-700 @break
+                        @case('DELIVERED') bg-green-100 text-green-700 @break
+                        @case('EXPIRED') bg-red-100 text-red-700 @break
+                        @case('REISSUED') bg-gray-200 text-gray-700 @break
+                        @default bg-gray-300 text-gray-700
+                    @endswitch">
+                    @switch($benefitDelivery->status)
+                            @case('PENDING') Pendente @break
+                            @case('DELIVERED') Entregue @break
+                            @case('EXPIRED') Expirado @break
+                            @case('REISSUED') Reemitido @break
+                            @default Desconhecido
+                        @endswitch
+                </span>
+                </div>
 
                 <div>
                     <p class="text-gray-900 font-semibold">{{ str()->words($benefitDelivery->person->name, 2, '') }}</p>
@@ -86,34 +106,49 @@
             @endif
         </td>
         <td class="py-4 pl-2 md:px-6 whitespace-nowrap">
-            <div class="hidden md:flex min-w-max items-center space-x-3 justify-end">
+            <div class="hidden md:flex min-w-max items-center space-x-3 justify-end relative">
                 @if($benefitDelivery->status === 'PENDING')
                     <button type="button"
-                            class="bg-green-500 text-white px-2 py-1 rounded hover:bg-green-600"
-                            onclick="confirmDelivery({{ $benefitDelivery->id }})">
-                        Entregar
+                            onclick="confirmDelivery({{ $benefitDelivery->id }})"
+                            class="group relative text-green-600 hover:text-green-800 transition duration-200 transform hover:scale-110 cursor-pointer">
+                        <i data-lucide="check-circle" class="w-5 h-5"></i>
+                        <span class="tooltip">Confirmar entrega</span>
                     </button>
+
                     <a href="{{ route('benefit-deliveries.edit', $benefitDelivery) }}"
-                       class="bg-indigo-500 text-white px-2 py-1 rounded hover:bg-indigo-600">
-                        Editar
+                       class="group relative text-indigo-600 hover:text-indigo-800 transition duration-200 transform hover:scale-110 cursor-pointer">
+                        <i data-lucide="edit" class="w-5 h-5"></i>
+                        <span class="tooltip">Editar</span>
                     </a>
                 @elseif($benefitDelivery->status === 'EXPIRED')
                     <button id="reissue-btn-{{ $benefitDelivery->id }}"
                             type="button"
-                            class="bg-yellow-500 text-white px-2 py-1 rounded hover:bg-yellow-600 disabled:bg-gray-300 disabled:cursor-not-allowed"
                             onclick="reissueTicket({{ $benefitDelivery->id }})"
-                        {{ $benefitDelivery->status === 'REISSUED' ? 'disabled' : '' }}>
-                        Reemitir
+                            class="group relative text-yellow-600 hover:text-yellow-800 disabled:text-gray-400 disabled:cursor-not-allowed transition duration-200 transform hover:scale-110 cursor-pointer">
+                        <i data-lucide="refresh-ccw" class="w-5 h-5"></i>
+                        <span class="tooltip">Reemitir</span>
                     </button>
                 @endif
-                <form action="{{ route('benefit-deliveries.destroy', $benefitDelivery) }}"
-                      method="POST" class="inline-block delete-form">
-                    @csrf
-                    @method('DELETE')
-                    <button type="submit" class="bg-red-500 text-white px-2 py-1 rounded hover:bg-red-600">
-                        Excluir
+
+                <!-- Dropdown com ações -->
+                <div class="relative">
+                    <button onclick="toggleDropdown(this)"
+                            class="group relative text-gray-600 hover:text-gray-800 pt-1 transition duration-200 transform hover:scale-110 cursor-pointer">
+                        <i data-lucide="more-vertical" class="w-5 h-5"></i>
+                        <span class="tooltip">Mais opções</span>
                     </button>
-                </form>
+                    <div class="hidden dropdown-actions absolute right-0 mt-2 bg-white shadow-lg border rounded-md w-32 z-10">
+                        <form action="{{ route('benefit-deliveries.destroy', $benefitDelivery) }}" method="POST" class="delete-form">
+                            @csrf
+                            @method('DELETE')
+                            <button type="submit"
+                                    class="group relative block w-full text-left px-4 py-2 text-sm text-red-600 hover:bg-red-50 transition duration-200 transform hover:scale-105 cursor-pointer">
+                                <i data-lucide="trash-2" class="w-4 h-4 inline-block mr-2"></i>Excluir
+                                <span class="tooltip">Excluir registro</span>
+                            </button>
+                        </form>
+                    </div>
+                </div>
             </div>
 
             <!-- Dropdown para Mobile -->
@@ -160,6 +195,5 @@
                 </div>
             </div>
         </td>
-
     </tr>
 @endforeach

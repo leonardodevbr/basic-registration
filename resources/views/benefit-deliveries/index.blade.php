@@ -58,8 +58,18 @@
         <div class="bg-white p-6 rounded-lg shadow-lg relative w-80 max-w-md">
             <div id="modal-content" class="text-center">
                 <!-- Placeholder da imagem -->
-                <div class="flex justify-center">
-                    <img id="modalImage" class="h-[160px] shadow rounded-full mx-auto mb-4 bg-gray-200" src="/placeholder.png" alt="Selfie">
+                <div class="flex justify-center relative group">
+                    <!-- Imagem do usuário -->
+                    <img id="modalImage"
+                         class="h-[160px] shadow rounded-full mx-auto mb-4 bg-gray-200 transition-transform duration-300 cursor-pointer"
+                         src="/placeholder.png"
+                         alt="Selfie"
+                         onclick="openImageModal(this.src)">
+
+                    <!-- Máscara de hover -->
+                    <div class="absolute h-[160px] w-[160px] bg-black bg-opacity-50 rounded-full flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity duration-300 pointer-events-none">
+                        <i data-lucide="expand" class="w-8 h-8 text-white"></i>
+                    </div>
                 </div>
 
                 <!-- Informações do beneficiário -->
@@ -373,14 +383,8 @@
                                         confirmButtonText: 'OK'
                                     });
 
-                                    // Recarrega apenas a tabela
-                                    fetch(window.location.href, {
-                                        headers: {'X-Requested-With': 'XMLHttpRequest'}
-                                    })
-                                        .then(response => response.text())
-                                        .then(html => {
-                                            document.getElementById("table-container").innerHTML = html;
-                                        });
+                                    // 🔄 Recarregar apenas a tabela
+                                    reloadTableContent(window.location.href);
                                 } else {
                                     Swal.fire({
                                         icon: 'error',
@@ -520,18 +524,13 @@
 
             function attachPaginationEvents() {
                 document.querySelectorAll("#pagination-links a").forEach(link => {
-                    link.addEventListener("click", function(e) {
+                    link.addEventListener("click", function (e) {
                         e.preventDefault();
                         let newUrl = this.href;
                         history.pushState(null, '', newUrl); // Atualiza a URL no navegador
 
-                        fetch(newUrl, { headers: { 'X-Requested-With': 'XMLHttpRequest' } })
-                            .then(response => response.text())
-                            .then(html => {
-                                tableContainer.innerHTML = html;
-                                attachPaginationEvents(); // Reanexar eventos após o carregamento
-                            })
-                            .catch(error => console.error('Erro ao carregar a página:', error));
+                        // 🔄 Recarregar a tabela com os novos dados
+                        reloadTableContent(newUrl);
                     });
                 });
             }
@@ -615,8 +614,34 @@
                 });
             }
 
+            function reloadTableContent(url) {
+                fetch(url, { headers: { 'X-Requested-With': 'XMLHttpRequest' } })
+                    .then(response => response.text())
+                    .then(html => {
+                        document.getElementById("table-container").innerHTML = html;
+
+                        // 🔥 Recarregar os ícones do Lucide
+                        if (typeof lucide !== "undefined") {
+                            lucide.createIcons();
+                        } else {
+                            console.error("Lucide não carregado corretamente.");
+                        }
+
+                        // 🔄 Reanexar eventos aos botões de ação
+                        attachPaginationEvents();
+                        attachDeleteEvents();
+                    })
+                    .catch(error => console.error("Erro ao recarregar a tabela:", error));
+            }
+
             // ** Garante que os eventos são reanexados após cada atualização da tabela **
             document.addEventListener("DOMContentLoaded", function () {
+                if (typeof lucide !== "undefined") {
+                    lucide.createIcons();
+                } else {
+                    console.error("Lucide não carregado corretamente.");
+                }
+
                 if (urlParams.has('filter')) {
                     filterInput.value = urlParams.get('filter');
                 }
