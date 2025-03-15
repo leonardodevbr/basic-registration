@@ -291,7 +291,6 @@
                     });
             }
 
-
             function exibirResultados(pessoas) {
                 const resultTable = document.getElementById("resultTable");
                 const resultContainer = document.getElementById("resultContainer");
