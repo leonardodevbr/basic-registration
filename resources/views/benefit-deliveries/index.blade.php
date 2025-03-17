@@ -25,12 +25,13 @@
                 </div>
 
                 <form id="filter-form" class="flex items-start space-x-2 mb-2">
-                    <div class="w-full">
+                    <!-- Input do filtro -->
+                    <div class="relative w-full">
                         <input type="text" autocomplete="off" name="filter" id="filter"
-                               placeholder="Filtrar por senha, CPF ou nome" class="border rounded px-2 py-1 w-full"/>
+                               placeholder="Filtrar por senha, CPF ou nome" class="border rounded px-2 py-1 w-full"
+                               inputmode="numeric" />
+                        <label id="filter-error" class="text-red-600 text-sm mt-1 hidden"></label>
                     </div>
-                    <button type="submit" class="bg-[orange] text-white px-3 py-1 rounded hover:bg-[#ffb93a]">Filtrar
-                    </button>
                 </form>
 
                 @include('benefit-deliveries.partials.table', ['benefitDeliveries' => $benefitDeliveries])
@@ -695,6 +696,67 @@
                     row.addEventListener("touchmove", function () {
                         clearTimeout(pressTimer); // Cancela o evento se o usuário deslizar o dedo
                     });
+                });
+
+                filterInput?.addEventListener("input", function () {
+                    let value = filterInput.value;
+
+                    // Se o valor contiver apenas dígitos, aplica a máscara do CPF se tiver mais de 6 dígitos
+                    if (/^\d/.test(value)) {
+                        value = value.replace(/\D/g, ""); // Remove tudo que não for número
+
+                        if (value.length > 6) value = value.replace(/^(\d{3})(\d)/, "$1.$2");
+                        if (value.length > 6) value = value.replace(/^(\d{3})\.(\d{3})(\d)/, "$1.$2.$3");
+                        if (value.length > 9) value = value.replace(/^(\d{3})\.(\d{3})\.(\d{3})(\d)/, "$1.$2.$3-$4");
+
+                        if (value.length > 14) {
+                            value = value.slice(0, 14);
+                        }
+                    }
+
+                    filterInput.value = value; // Atualiza o campo
+
+                    // Se o campo for limpo, reseta lastSubmittedFilter e dispara o reset apenas uma vez
+                    if (value.trim() === '') {
+                        lastSubmittedFilter = "";
+                        if (!emptyFilterSent) {
+                            emptyFilterSent = true;
+                            filterError.classList.add("hidden");
+                            loadingOverlay.classList.remove("hidden");
+                            fetch("{{ route('benefit-deliveries.filter') }}?filter=", {
+                                headers: { 'Accept': 'application/json' }
+                            })
+                                .then(response => response.json())
+                                .then(data => {
+                                    if (data.success) {
+                                        document.getElementById("deliveries-table-body").innerHTML = data.html;
+                                    } else {
+                                        Swal.fire({
+                                            icon: 'error',
+                                            title: 'Erro',
+                                            text: data.message || 'Falha ao carregar os registros.',
+                                            confirmButtonText: 'OK'
+                                        });
+                                    }
+                                })
+                                .catch(error => {
+                                    console.error("Erro ao resetar filtro:", error);
+                                    Swal.fire({
+                                        icon: 'error',
+                                        title: 'Erro',
+                                        text: 'Ocorreu um erro ao resetar o filtro. Tente novamente.',
+                                        confirmButtonText: 'OK'
+                                    });
+                                })
+                                .finally(() => {
+                                    loadingOverlay.classList.add("hidden");
+                                });
+                        }
+                    } else {
+                        // Se houver conteúdo, reseta a flag de reset e o último filtro enviado
+                        emptyFilterSent = false;
+                        lastSubmittedFilter = "";
+                    }
                 });
 
                 attachFilterEvents(); // Chamar a função ao carregar a página
