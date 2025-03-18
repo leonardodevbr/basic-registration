@@ -5,7 +5,7 @@
                 <ol class="list-reset flex">
                     <li><a href="{{ route('dashboard') }}" class="text-indigo-600 hover:text-indigo-800">Dashboard</a></li>
                     <li><span class="mx-2">/</span></li>
-                    <li><a href="{{ route('benefit-deliveries.index') }}" class="text-indigo-600 hover:text-indigo-800">Benefícios entregues</a></li>
+                    <li><a href="{{ route('benefit-deliveries.index') }}" class="text-indigo-600 hover:text-indigo-800">Gestão de Benefícios</a></li>
                     <li><span class="mx-2">/</span></li>
                     <li>Novo</li>
                 </ol>

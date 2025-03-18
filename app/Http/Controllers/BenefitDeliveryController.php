@@ -8,11 +8,8 @@ use App\Jobs\ProcessSelfieImage;
 use App\Models\Base\Benefit;
 use App\Models\Base\BenefitDelivery;
 use App\Models\Person;
-use Google\Cloud\Storage\StorageClient;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Cache;
-use Intervention\Image\Drivers\Gd\Driver;
-use Intervention\Image\ImageManager;
 
 class BenefitDeliveryController extends Controller
 {
@@ -25,7 +22,12 @@ class BenefitDeliveryController extends Controller
             ->paginate($this->agent->isDesktop() ? 10 : 30)->withPath(url()->current());
 
         if ($request->ajax()) {
-            return view('benefit-deliveries.partials.table', compact('benefitDeliveries'))->render();
+            $html = view('benefit-deliveries.partials.table', compact('benefitDeliveries'))->render();
+
+            return response()->json([
+                'success' => true,
+                'html' => $html
+            ]);
         }
 
         return view('benefit-deliveries.index', compact('benefitDeliveries'));
