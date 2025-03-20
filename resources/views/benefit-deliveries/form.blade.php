@@ -46,7 +46,7 @@
                             class="px-4 py-2 bg-red-500 text-white rounded w-full {{ $selfieValue ? '' : 'hidden' }}">
                         Cancelar
                     </button>
-                    <button type="button" id="switch-camera-btn" class="bg-gray-200/80 px-4 py-2 ml-2 rounded">
+                    <button type="button" id="switch-camera-btn" class="bg-gray-200/80 px-4 py-2 ml-2 rounded  {{ $selfieValue ? 'hidden' : '' }}">
                         <img src="{{ asset('flip-cam.svg') }}" alt="Trocar câmera" style="max-width:none; width: 32px; height: 32px;">
                     </button>
                 </div>
