@@ -103,10 +103,12 @@
             />
             <button
                 type="button"
+                id="quick-delivery-button"
                 onclick="quickDelivery()"
-                class="w-full bg-blue-500 text-white px-4 py-2 rounded hover:bg-blue-600"
+                class="relative w-full bg-blue-500 text-white px-4 py-2 rounded hover:bg-blue-600 overflow-hidden"
             >
-                Processar
+                <span id="quick-delivery-progress" class="absolute left-0 top-0 h-full w-0 bg-blue-700 opacity-50 transition-all duration-500"></span>
+                <span id="quick-delivery-text">Processar</span>
             </button>
         </div>
     </div>
@@ -540,6 +542,7 @@
                             .then((response) => response.json())
                             .then((data) => {
                                 if (data.success) {
+                                    detailsModal.classList.add('hidden');
                                     Swal.fire({
                                         icon: "success",
                                         title: "Entrega Confirmada",
@@ -654,17 +657,17 @@
                                 fetch(actionUrl, {
                                     method: "DELETE",
                                     headers: {
-                                        "X-CSRF-TOKEN": document
-                                            .querySelector(
-                                                'meta[name="csrf-token"]',
-                                            )
-                                            .getAttribute("content"),
+                                        "Content-Type": "application/json",
+                                        "X-CSRF-TOKEN": "{{ csrf_token() }}",
                                         Accept: "application/json",
                                     },
                                 })
                                     .then((response) => response.json())
                                     .then((data) => {
                                         if (data.success) {
+                                            attachPaginationEvents();
+                                            attachDeleteEvents();
+                                            attachFilterEvents();
                                             row.remove();
                                             Swal.fire({
                                                 icon: "success",
@@ -801,7 +804,7 @@
             function openQuickDeliveryModal() {
                 quickDeliveryModal
                     .classList.remove("hidden");
-                document.getElementById("quickDeliveryCode").focus();
+                quickDeliveryCode.focus();
             }
 
             function closeQuickDeliveryModal() {
@@ -810,9 +813,12 @@
             }
 
             async function quickDelivery() {
-                const code = document
-                    .getElementById("quickDeliveryCode")
-                    .value.trim();
+                const codeInput = document.getElementById("quick-delivery-code");
+                const code = codeInput.value.trim();
+                const button = document.getElementById("quick-delivery-button");
+                const progressBar = document.getElementById("quick-delivery-progress");
+                const buttonText = document.getElementById("quick-delivery-text");
+
                 if (code.length !== 6) {
                     Swal.fire({
                         icon: "warning",
@@ -824,53 +830,81 @@
                 }
 
                 try {
-                    const response = await fetch(
-                        "{{ route('benefit-deliveries.quick-deliver') }}",
-                        {
-                            method: "PATCH",
-                            headers: {
-                                "Content-Type": "application/json",
-                                "X-CSRF-TOKEN": "{{ csrf_token() }}",
-                                Accept: "application/json",
-                            },
-                            body: JSON.stringify({ticket_code: code}),
+                    // Desativa o botão e inicia a animação da barra de progresso
+                    button.disabled = true;
+                    buttonText.innerText = "Processando...";
+                    progressBar.style.width = "100%"; // Simula o preenchimento
+
+                    const response = await fetch("{{ route('benefit-deliveries.quick-deliver') }}", {
+                        method: "PATCH",
+                        headers: {
+                            "Content-Type": "application/json",
+                            "X-CSRF-TOKEN": "{{ csrf_token() }}",
+                            Accept: "application/json",
                         },
-                    );
+                        body: JSON.stringify({ ticket_code: code }),
+                    });
+
+                    // 🔥 🚀 Se o status for >= 400, lança um erro ANTES de chamar .json()
+                    if (!response.ok) {
+                        const errorData = await response.json(); // Captura o JSON antes de lançar o erro
+                        throw new Error(errorData.message || `Erro ${response.status}: ${response.statusText}`);
+                    }
+
                     const data = await response.json();
 
-                    if (response.ok && data.success) {
-                        Swal.fire({
-                            icon: "success",
-                            title: "Baixa Registrada",
-                            text: data.message,
-                            confirmButtonText: "OK",
-                        }).then(() => {
-                            document.getElementById("quickDeliveryCode").value = "";
-                            fetch(window.location.href, {
-                                headers: {"X-Requested-With": "XMLHttpRequest"},
-                            }).then((response) => response.text())
-                                .then((html) => {
-                                    tableContainer.innerHTML = html;
-                                    attachPaginationEvents();
-                                });
-                        });
-                    } else {
-                        Swal.fire({
-                            icon: "error",
-                            title: "Erro",
-                            text: data.message || "Falha ao registrar a baixa.",
-                            confirmButtonText: "OK",
-                        });
+                    // 🚀 Se o backend retornou `success: false`, lança erro manualmente
+                    if (!data.success) {
+                        throw new Error(data.message || "Erro ao registrar a baixa.");
                     }
+
+                    // ✅ Sucesso: exibe mensagem e recarrega a tabela
+                    Swal.fire({
+                        icon: "success",
+                        title: "Baixa Registrada",
+                        text: data.message,
+                        confirmButtonText: "OK",
+                    }).then(() => {
+                        // Limpa o input e reseta a tabela
+                        codeInput.value = "";
+                        loadingOverlay.classList.remove("hidden");
+                        fetch("{{ route('benefit-deliveries.index') }}", {
+                            headers: {"X-Requested-With": "XMLHttpRequest"},
+                        })
+                            .then((response) => response.json())
+                            .then((data) => {
+                                tableContainer.innerHTML = data.html;
+                            })
+                            .finally(() => {
+                                loadingOverlay.classList.add("hidden");
+                                quickDeliveryCode.focus();
+                            });
+
+                        // Restaura o botão ao estado inicial
+                        resetButton(button, progressBar, buttonText);
+                    });
+
                 } catch (error) {
                     console.error("Erro:", error);
                     Swal.fire({
                         icon: "error",
-                        title: "Erro Inesperado",
-                        text: "Ocorreu um erro inesperado. Tente novamente mais tarde.",
+                        title: "Erro",
+                        text: error.message || "Ocorreu um erro inesperado. Tente novamente mais tarde.",
                         confirmButtonText: "OK",
                     });
+
+                    // Restaura o botão ao estado original
+                    resetButton(button, progressBar, buttonText);
                 }
+            }
+
+            // ✅ Função para restaurar o botão ao estado original
+            function resetButton(button, progressBar, buttonText) {
+                setTimeout(() => {
+                    progressBar.style.width = "0"; // Esvazia a barra de progresso
+                    buttonText.innerText = "Processar";
+                    button.disabled = false;
+                }, 500);
             }
 
             function toggleDropdown(button) {

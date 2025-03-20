@@ -139,8 +139,6 @@
                     </button>
                     <div class="hidden dropdown-actions absolute right-0 mt-2 bg-white shadow-lg border rounded-md w-32 z-10">
                         <form action="{{ route('benefit-deliveries.destroy', $benefitDelivery) }}" method="POST" class="delete-form">
-                            @csrf
-                            @method('DELETE')
                             <button type="submit"
                                     class="group relative block w-full text-left px-4 py-2 text-sm text-red-600 hover:bg-red-50 transition duration-200 transform hover:scale-105 cursor-pointer">
                                 <i data-lucide="trash-2" class="w-4 h-4 inline-block mr-2"></i>Excluir
@@ -165,30 +163,28 @@
                     @if($benefitDelivery->status === 'PENDING')
                         <button type="button"
                                 class="block w-full text-left px-4 py-2 text-sm text-gray-700 hover:bg-gray-100"
-                                onclick="confirmDelivery({{ $benefitDelivery->id }}); toggleDropdown(this.closest('.relative').querySelector('button'))">
+                                onclick="confirmDelivery({{ $benefitDelivery->id }}); toggleDropdown(this.closest('.dropdown-actions').closest('.dropdown-button').querySelector('button'))">
                             Entregar
                         </button>
                         <a href="{{ route('benefit-deliveries.edit', $benefitDelivery) }}"
                            class="block w-full text-left px-4 py-2 text-sm text-gray-700 hover:bg-gray-100"
-                           onclick="toggleDropdown(this.closest('.relative').querySelector('button'))">
+                           onclick="toggleDropdown(this.closest('.dropdown-actions').closest('.dropdown-button').querySelector('button'))">
                             Editar
                         </a>
                     @elseif($benefitDelivery->status === 'EXPIRED')
                         <button id="reissue-btn-{{ $benefitDelivery->id }}"
                                 type="button"
                                 class="block w-full text-left px-4 py-2 text-sm text-gray-700 hover:bg-gray-100"
-                                onclick="reissueTicket({{ $benefitDelivery->id }}); toggleDropdown(this.closest('.relative').querySelector('button'))"
+                                onclick="reissueTicket({{ $benefitDelivery->id }}); toggleDropdown(this.closest('.dropdown-actions').closest('.dropdown-button').querySelector('button'))"
                             {{ $benefitDelivery->status === 'REISSUED' ? 'disabled' : '' }}>
                             Reemitir
                         </button>
                     @endif
                     <form action="{{ route('benefit-deliveries.destroy', $benefitDelivery) }}"
                           method="POST" class="block w-full text-left delete-form">
-                        @csrf
-                        @method('DELETE')
                         <button type="submit"
                                 class="block w-full text-left px-4 py-2 text-sm text-gray-700 hover:bg-gray-100"
-                                onclick="toggleDropdown(this.closest('.relative').querySelector('button'))">
+                                onclick="toggleDropdown(this.closest('form').closest('.dropdown-actions').closest('.dropdown-button'))">
                             Excluir
                         </button>
                     </form>
