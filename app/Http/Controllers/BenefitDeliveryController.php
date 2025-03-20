@@ -15,15 +15,40 @@ class BenefitDeliveryController extends Controller
 {
     public function index(Request $request)
     {
-        $benefitDeliveries = BenefitDelivery::orderByRaw(
-            "CASE
-        WHEN status = 'REISSUED' THEN 1 ELSE 0 END, id DESC"
-        )
-            ->paginate($this->agent->isDesktop() ? 10 : 30)->withPath(url()->current());
+        $sortBy = $request->get('sort_by', 'default'); // Padrão = 'default'
+        $sortOrder = $request->get('sort_order', 'desc'); // Padrão = 'desc'
+
+        // Definir ordenação padrão
+        $query = BenefitDelivery::query();
+
+        if ($sortBy === 'status') {
+            // Ordenação por status personalizado
+            $query->orderByRaw("
+            CASE
+                WHEN status = 'PENDING' THEN 0
+                WHEN status = 'DELIVERED' THEN 1
+                WHEN status = 'REISSUED' THEN 3
+                ELSE 2
+            END, id $sortOrder
+        ");
+        } elseif ($sortBy === 'id') {
+            // Ordenação apenas pelo ID
+            $query->orderBy('id', $sortOrder);
+        } elseif ($sortBy === 'name') {
+            // Ordenação por nome da pessoa associada
+            $query->join('people', 'people.id', '=', 'benefit_deliveries.person_id')
+                ->orderBy('people.name', $sortOrder)
+                ->select('benefit_deliveries.*');
+        } elseif ($sortBy === 'created_at') {
+            // Ordenação por data de criação
+            $query->orderBy('created_at', $sortOrder);
+        }
+
+        $benefitDeliveries = $query->paginate($this->agent->isDesktop() ? 10 : 30)
+            ->withPath(url()->current());
 
         if ($request->ajax()) {
             $html = view('benefit-deliveries.partials.table', compact('benefitDeliveries'))->render();
-
             return response()->json([
                 'success' => true,
                 'html' => $html
