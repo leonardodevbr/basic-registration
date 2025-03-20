@@ -137,7 +137,7 @@
                         <i data-lucide="more-vertical" class="w-5 h-5"></i>
                         <span class="tooltip">Mais opções</span>
                     </button>
-                    <div class="hidden dropdown-actions absolute right-0 mt-2 bg-white shadow-lg border rounded-md w-32 z-10">
+                    <div class="hidden dropdown-items absolute right-0 mt-2 bg-white shadow-lg border rounded-md w-32 z-10">
                         <form action="{{ route('benefit-deliveries.destroy', $benefitDelivery) }}" method="POST" class="delete-form">
                             <button type="submit"
                                     class="group relative block w-full text-left px-4 py-2 text-sm text-red-600 hover:bg-red-50 transition duration-200 transform hover:scale-105 cursor-pointer">
@@ -150,7 +150,7 @@
             </div>
 
             <!-- Dropdown para Mobile -->
-            <div class="md:hidden justify-end">
+            <div class="md:hidden justify-end dropdown-actions">
                 <button class="dropdown-button bg-gray-200 text-gray-700 px-2 py-1 rounded-md flex items-center ml-auto">
                     <svg class="w-5 h-5 pointer-events-none" fill="none" stroke="currentColor" stroke-width="2"
                          viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
@@ -159,36 +159,37 @@
                     </svg>
                 </button>
 
-                <div class="hidden dropdown-actions absolute right-5 mt-2 bg-white shadow-lg border rounded-md w-32 z-10">
+                <div class="hidden dropdown-items absolute right-5 mt-2 space-y-1 z-10 bg-white border shadow-lg rounded-md p-2">
                     @if($benefitDelivery->status === 'PENDING')
                         <button type="button"
-                                class="block w-full text-left px-4 py-2 text-sm text-gray-700 hover:bg-gray-100"
-                                onclick="confirmDelivery({{ $benefitDelivery->id }}); toggleDropdown(this.closest('.dropdown-actions').closest('.dropdown-button').querySelector('button'))">
-                            Entregar
+                                onclick="confirmDelivery({{ $benefitDelivery->id }}); toggleDropdown(this.closest('.dropdown-actions'))"
+                                class="flex items-center gap-2 w-full px-3 py-1.5 text-sm font-medium text-white bg-green-600 rounded-md shadow-sm hover:bg-green-700 transform hover:scale-105 transition duration-200">
+                            <i data-lucide="check-circle" class="w-4 h-4"></i> Entregar
                         </button>
+
                         <a href="{{ route('benefit-deliveries.edit', $benefitDelivery) }}"
-                           class="block w-full text-left px-4 py-2 text-sm text-gray-700 hover:bg-gray-100"
-                           onclick="toggleDropdown(this.closest('.dropdown-actions').closest('.dropdown-button').querySelector('button'))">
-                            Editar
+                           class="flex items-center gap-2 w-full px-3 py-1.5 text-sm font-medium text-white bg-indigo-600 rounded-md shadow-sm hover:bg-indigo-700 transform hover:scale-105 transition duration-200">
+                            <i data-lucide="edit" class="w-4 h-4"></i> Editar
                         </a>
                     @elseif($benefitDelivery->status === 'EXPIRED')
                         <button id="reissue-btn-{{ $benefitDelivery->id }}"
                                 type="button"
-                                class="block w-full text-left px-4 py-2 text-sm text-gray-700 hover:bg-gray-100"
-                                onclick="reissueTicket({{ $benefitDelivery->id }}); toggleDropdown(this.closest('.dropdown-actions').closest('.dropdown-button').querySelector('button'))"
-                            {{ $benefitDelivery->status === 'REISSUED' ? 'disabled' : '' }}>
-                            Reemitir
+                                onclick="reissueTicket({{ $benefitDelivery->id }}); toggleDropdown(this.closest('.dropdown-actions'))"
+                                {{ $benefitDelivery->status === 'REISSUED' ? 'disabled' : '' }}
+                                class="flex items-center gap-2 w-full px-3 py-1.5 text-sm font-medium text-white bg-yellow-600 rounded-md shadow-sm hover:bg-yellow-700 transform hover:scale-105 transition duration-200">
+                            <i data-lucide="refresh-ccw" class="w-4 h-4"></i> Reemitir
                         </button>
                     @endif
-                    <form action="{{ route('benefit-deliveries.destroy', $benefitDelivery) }}"
-                          method="POST" class="block w-full text-left delete-form">
+
+                    <form action="{{ route('benefit-deliveries.destroy', $benefitDelivery) }}" method="POST" class="delete-form">
                         <button type="submit"
-                                class="block w-full text-left px-4 py-2 text-sm text-gray-700 hover:bg-gray-100"
-                                onclick="toggleDropdown(this.closest('form').closest('.dropdown-actions').closest('.dropdown-button'))">
-                            Excluir
+                                onclick="toggleDropdown(this.closest('form').closest('.dropdown-actions'))"
+                                class="flex items-center gap-2 w-full px-3 py-1.5 text-sm font-medium text-white bg-red-600 rounded-md shadow-sm hover:bg-red-700 transform hover:scale-105 transition duration-200">
+                            <i data-lucide="trash-2" class="w-4 h-4"></i> Excluir
                         </button>
                     </form>
                 </div>
+
             </div>
         </td>
     </tr>

@@ -549,7 +549,16 @@
                                         text: data.message,
                                         confirmButtonText: "OK",
                                     }).then(() => {
+                                        if (typeof lucide !== "undefined") {
+                                            lucide.createIcons();
+                                        } else {
+                                            console.error("Lucide não carregado corretamente.");
+                                        }
+
+                                        // Reanexar eventos
                                         reloadTableContent(window.location.href);
+                                        attachRowsEvents();
+                                        attachDeleteEvents();
                                     });
                                 } else {
                                     Swal.fire({
@@ -666,6 +675,7 @@
                                     .then((data) => {
                                         if (data.success) {
                                             attachPaginationEvents();
+                                            attachRowsEvents();
                                             attachDeleteEvents();
                                             attachFilterEvents();
                                             row.remove();
@@ -757,6 +767,7 @@
 
                                 // Reanexar eventos
                                 attachPaginationEvents();
+                                attachRowsEvents();
                                 attachDeleteEvents();
                                 attachFilterEvents();
                             } else {
@@ -778,6 +789,35 @@
                             });
                         }
                     });
+            }
+
+            function attachRowsEvents() {
+                document.querySelectorAll("tr").forEach((row) => {
+                    let pressTimer;
+
+                    row.addEventListener("touchstart", function (e) {
+                        if (e.target.classList.contains("dropdown-button")) {
+                            toggleDropdown(e.target.closest('.dropdown-actions'));
+                            return;
+                        }
+
+                        // Inicia o temporizador para detectar um press longo
+                        pressTimer = setTimeout(() => {
+                            const dropdown = row.querySelector(".dropdown-actions");
+                            if (dropdown) {
+                                toggleDropdown(dropdown);
+                            }
+                        }, 300); // Tempo de pressão longa
+                    });
+
+                    row.addEventListener("touchend", function () {
+                        clearTimeout(pressTimer);
+                    });
+
+                    row.addEventListener("touchmove", function () {
+                        clearTimeout(pressTimer); // Cancela o evento se o usuário deslizar o dedo
+                    });
+                });
             }
 
             function attachPaginationEvents() {
@@ -845,7 +885,6 @@
                         body: JSON.stringify({ ticket_code: code }),
                     });
 
-                    // 🔥 🚀 Se o status for >= 400, lança um erro ANTES de chamar .json()
                     if (!response.ok) {
                         const errorData = await response.json(); // Captura o JSON antes de lançar o erro
                         throw new Error(errorData.message || `Erro ${response.status}: ${response.statusText}`);
@@ -907,13 +946,13 @@
                 }, 500);
             }
 
-            function toggleDropdown(button) {
-                const dropdown = button.nextElementSibling;
-                dropdown.classList.toggle("hidden");
+            function toggleDropdown(dropdown) {
+                let button = dropdown.querySelector('.dropdown-button');
+                let items = dropdown.querySelector('.dropdown-items');
 
                 // Fecha qualquer outro dropdown aberto
-                document.querySelectorAll(".dropdown-actions").forEach((el) => {
-                    if (el !== dropdown) {
+                document.querySelectorAll(".dropdown-items").forEach((el) => {
+                    if (el !== items) {
                         el.classList.add("hidden");
                     }
                 });
@@ -922,12 +961,14 @@
                 document.addEventListener("click", function closeDropdown(event) {
                     if (
                         !button.contains(event.target) &&
-                        !dropdown.contains(event.target)
+                        !items.contains(event.target)
                     ) {
-                        dropdown.classList.add("hidden");
+                        items.classList.add("hidden");
                         document.removeEventListener("click", closeDropdown);
                     }
                 });
+
+                items.classList.remove("hidden");
             }
 
             function reloadTableContent(url) {
@@ -946,6 +987,7 @@
 
                             // Reanexar eventos
                             attachPaginationEvents();
+                            attachRowsEvents();
                             attachDeleteEvents();
                             attachFilterEvents();
                         } else {
@@ -995,34 +1037,6 @@
                         e.preventDefault();
                         quickDelivery();
                     }
-                });
-
-                document.querySelectorAll("tr").forEach((row) => {
-                    let pressTimer;
-
-                    row.addEventListener("touchstart", function (e) {
-                        if (e.target.classList.contains("dropdown-button")) {
-                            toggleDropdown(e.target);
-                            return;
-                        }
-
-                        // Inicia o temporizador para detectar um press longo
-                        pressTimer = setTimeout(() => {
-                            const dropdownButton =
-                                row.querySelector(".dropdown-button");
-                            if (dropdownButton) {
-                                toggleDropdown(dropdownButton);
-                            }
-                        }, 300); // Tempo de pressão longa
-                    });
-
-                    row.addEventListener("touchend", function () {
-                        clearTimeout(pressTimer);
-                    });
-
-                    row.addEventListener("touchmove", function () {
-                        clearTimeout(pressTimer); // Cancela o evento se o usuário deslizar o dedo
-                    });
                 });
 
                 filterInput?.addEventListener("input", function () {
@@ -1086,6 +1100,7 @@
 
                 attachFilterEvents(); // Chamar a função ao carregar a página
                 attachPaginationEvents(); // Chamar a função ao carregar a página
+                attachRowsEvents();
                 attachDeleteEvents(); // Chama a função ao carregar a página
             });
         </script>
