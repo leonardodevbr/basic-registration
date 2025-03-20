@@ -15,13 +15,13 @@ class BenefitDeliveryController extends Controller
 {
     public function index(Request $request)
     {
-        $sortBy = $request->get('sort_by', 'default'); // Padrão = 'default'
-        $sortOrder = $request->get('sort_order', 'desc'); // Padrão = 'desc'
+        $sortBy = $request->get('sort_by', 'status');
+        $sortOrder = $request->get('sort_order', 'desc');
 
         // Definir ordenação padrão
         $query = BenefitDelivery::query();
 
-        if ($sortBy === 'status') {
+        if ($sortBy === 'status' || $sortBy === 'default') {
             // Ordenação por status personalizado
             $query->orderByRaw("
             CASE

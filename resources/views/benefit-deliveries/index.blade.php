@@ -55,15 +55,18 @@
                 <form id="filter-form" class="flex items-start space-x-2 mb-2">
                     <!-- Input do filtro -->
                     <div class="relative w-full">
-                        <input
-                            type="text"
-                            autocomplete="off"
-                            name="filter"
-                            id="filter"
-                            placeholder="Filtrar por senha, CPF ou nome"
-                            class="border rounded px-2 py-1 w-full"
-                            inputmode="numeric"
-                        />
+                        <div class="flex">
+                            <input
+                                type="text"
+                                autocomplete="off"
+                                name="filter"
+                                id="filter"
+                                placeholder="Filtrar por senha, CPF ou nome"
+                                class="border rounded-l px-2 py-1 w-full"
+                                inputmode="numeric"
+                            />
+                            <button type="submit" class="bg-[#1b1b18] hover:bg-[#1b1b02] text-center text-white px-4 py-2 rounded-r">Filtrar</button>
+                        </div>
                         <label
                             id="filter-error"
                             class="text-red-600 text-sm mt-1 hidden"
@@ -706,7 +709,7 @@
                             .value.trim();
 
                         // 🔥 Bloqueia pesquisas com menos de 3 caracteres, exceto quando limpando
-                        if (filter.length > 0 && filter.length < 3) {
+                        if (filter.length < 3) {
                             Swal.fire({
                                 icon: "warning",
                                 title: "Atenção",
