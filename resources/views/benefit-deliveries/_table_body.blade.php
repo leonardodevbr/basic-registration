@@ -76,7 +76,7 @@
                           d="M5.121 17.804A12.042 12.042 0 0112 15.5c2.225 0 4.312.606 6.121 1.664M12 12a4 4 0 100-8 4 4 0 000 8z"></path>
                 </svg>
                 <span class="text-sm text-gray-700">
-                    {{ $benefitDelivery->registered_by ? $benefitDelivery->user->name : 'Não informado' }}
+                    {{ $benefitDelivery->registered_by_id ? $benefitDelivery->registeredBy->name : 'Não informado' }}
                 </span>
             </div>
             <p class="text-sm text-gray-600 mt-1">
@@ -92,7 +92,7 @@
                               d="M5.121 17.804A12.042 12.042 0 0112 15.5c2.225 0 4.312.606 6.121 1.664M12 12a4 4 0 100-8 4 4 0 000 8z"></path>
                     </svg>
                     <span class="text-sm text-gray-700">
-                        {{ $benefitDelivery->delivered_by ? $benefitDelivery->user->name : 'Não informado' }}
+                        {{ $benefitDelivery->delivered_by_id ? $benefitDelivery->deliveredBy->name : 'Não informado' }}
                     </span>
                 </div>
                 <p class="text-sm text-gray-600 mt-1">

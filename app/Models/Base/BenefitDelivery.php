@@ -24,8 +24,8 @@ use Illuminate\Database\Eloquent\Relations\BelongsTo;
  * @property string $ticket_code
  * @property Carbon $valid_until
  * @property string $status
- * @property int|null $registered_by
- * @property int|null $delivered_by
+ * @property int|null $registered_by_id
+ * @property int|null $delivered_by_id
  * @property int|null $unit_id
  * @property Carbon|null $delivered_at
  * @property Carbon|null $created_at
@@ -47,8 +47,8 @@ class BenefitDelivery extends Model
 		'benefit_id' => 'int',
 		'person_id' => 'int',
 		'valid_until' => 'datetime',
-		'registered_by' => 'int',
-		'delivered_by' => 'int',
+		'registered_by_id' => 'int',
+		'delivered_by_id' => 'int',
 		'unit_id' => 'int',
 		'delivered_at' => 'datetime'
 	];
@@ -59,8 +59,8 @@ class BenefitDelivery extends Model
 		'ticket_code',
 		'valid_until',
 		'status',
-		'registered_by',
-		'delivered_by',
+		'registered_by_id',
+		'delivered_by_id',
 		'unit_id',
 		'delivered_at'
 	];
@@ -70,20 +70,15 @@ class BenefitDelivery extends Model
 		return $this->belongsTo(Benefit::class);
 	}
 
-	public function user(): BelongsTo
+	public function registeredBy(): BelongsTo
 	{
-		return $this->belongsTo(User::class, 'registered_by');
+		return $this->belongsTo(User::class, 'registered_by_id');
 	}
 
-    public function registered_by(): BelongsTo
-    {
-        return $this->belongsTo(User::class, 'registered_by');
-    }
-
-    public function delivered_by(): BelongsTo
-    {
-        return $this->belongsTo(User::class, 'delivered_by');
-    }
+	public function deliveredBy(): BelongsTo
+	{
+		return $this->belongsTo(User::class, 'delivered_by_id');
+	}
 
 	public function person(): BelongsTo
 	{

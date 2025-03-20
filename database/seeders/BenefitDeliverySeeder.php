@@ -94,8 +94,8 @@ class BenefitDeliverySeeder extends Seeder
                 'ticket_code'   => $ticketCode,
                 'valid_until'   => Carbon::now()->addDays(rand(-10, 10)),
                 'status'        => $status,
-                'registered_by' => fake()->randomElement($users),
-                'delivered_by'  => $deliveredAt ? fake()->randomElement($users) : null,
+                'registered_by_id' => fake()->randomElement($users),
+                'delivered_by_id'  => $deliveredAt ? fake()->randomElement($users) : null,
                 'delivered_at'  => $deliveredAt,
                 'unit_id'       => null,
             ]);

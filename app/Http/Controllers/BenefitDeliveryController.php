@@ -10,6 +10,8 @@ use App\Models\Base\BenefitDelivery;
 use App\Models\Person;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Cache;
+use Illuminate\Support\Facades\View;
+use Mpdf\Mpdf;
 
 class BenefitDeliveryController extends Controller
 {
@@ -125,7 +127,7 @@ class BenefitDeliveryController extends Controller
             'ticket_code' => $ticketCode,
             'valid_until' => $validUntil,
             'status' => 'PENDING',
-            'registered_by' => auth()->check() ? auth()->user()->id : null,
+            'registered_by_id' => auth()->check() ? auth()->user()->id : null,
             'delivered_at' => null,
             'unit_id' => $inputData['unit_id'] ?? null,
         ]);
@@ -232,7 +234,7 @@ class BenefitDeliveryController extends Controller
 
     public function show(int $benefitDeliveryId)
     {
-        $person = BenefitDelivery::with('person', 'benefit', 'registered_by', 'delivered_by')->find($benefitDeliveryId);
+        $person = BenefitDelivery::with('person', 'benefit', 'registeredBy', 'deliveredBy')->find($benefitDeliveryId);
         return response()->json($person);
     }
 
@@ -248,7 +250,7 @@ class BenefitDeliveryController extends Controller
         $benefitDelivery->update([
             'status' => 'DELIVERED',
             'delivered_at' => now(),
-            'delivered_by' => auth()->check() ? auth()->user()->id : null,
+            'delivered_by_id' => auth()->check() ? auth()->user()->id : null,
         ]);
 
         return response()->json([
@@ -302,7 +304,7 @@ class BenefitDeliveryController extends Controller
         $benefitDelivery->update([
             'status' => 'DELIVERED',
             'delivered_at' => now(),
-            'delivered_by' => auth()->check() ? auth()->user()->id : null,
+            'delivered_by_id' => auth()->check() ? auth()->user()->id : null,
         ]);
 
         return response()->json([
@@ -330,7 +332,7 @@ class BenefitDeliveryController extends Controller
             'ticket_code' => $ticketCode,
             'valid_until' => $validUntil,
             'status' => 'PENDING',
-            'registered_by' => auth()->id(),
+            'registered_by_id' => auth()->id(),
             'unit_id' => $oldBenefit->unit_id,
             'reissued_from' => $oldBenefit->id, // Relaciona com o registro antigo
         ]);
@@ -344,6 +346,35 @@ class BenefitDeliveryController extends Controller
                 'previous_id' => $oldBenefit->id,
             ],
         ]);
+    }
+
+    public function generateReceipt($id)
+    {
+        // 🔹 Buscar a entrega do benefício e carregar seus relacionamentos
+        $benefitDelivery = BenefitDelivery::with(['person', 'benefit', 'registeredBy', 'deliveredBy'])
+            ->findOrFail($id);
+//        dd($benefitDelivery->toArray());
+
+        // 🔹 Gerar o HTML do recibo usando uma view Blade específica
+        $html = View::make('benefit-deliveries.receipt', compact('benefitDelivery'))->render();
+
+        // 🔹 Criar uma nova instância do mPDF
+        $mpdf = new Mpdf([
+            'mode' => 'utf-8',
+            'format' => 'A4',
+            'orientation' => 'P', // P = Retrato (Portrait), L = Paisagem (Landscape)
+            'default_font' => 'Arial'
+        ]);
+
+        // 🔹 Definir o HTML no mPDF
+        $mpdf->WriteHTML($html);
+
+        // 🔹 Definir nome do arquivo PDF
+        $fileName = "Recibo_Beneficio_{$benefitDelivery->id}.pdf";
+
+
+        // 🔹 Exibir o PDF diretamente no navegador
+        $mpdf->Output("Recibo_Beneficio_{$benefitDelivery->id}.pdf", 'I'); // 'I' = Inline (abre no navegador)
     }
 
 }

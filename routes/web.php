@@ -15,6 +15,7 @@ Route::middleware(['auth'])->group(function () {
     Route::get('/benefit-deliveries/filter', [BenefitDeliveryController::class, 'filter'])->name('benefit-deliveries.filter');
     Route::patch('/benefit-deliveries/quick-deliver', [BenefitDeliveryController::class, 'quickDeliver'])->name('benefit-deliveries.quick-deliver');
     Route::post('/benefit-deliveries/{id}/reissue', [BenefitDeliveryController::class, 'reissue'])->name('benefit-deliveries.reissue');
+    Route::get('/benefit-deliveries/{id}/receipt', [BenefitDeliveryController::class, 'generateReceipt'])->name('benefit-deliveries.receipt');
     Route::resource('/benefit-deliveries', BenefitDeliveryController::class);
 
     Route::get('/profile', [ProfileController::class, 'edit'])->name('profile.edit');

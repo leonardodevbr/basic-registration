@@ -52,6 +52,6 @@ class User extends \Illuminate\Foundation\Auth\User
 
 	public function benefit_deliveries(): HasMany
 	{
-		return $this->hasMany(BenefitDelivery::class, 'registered_by');
+		return $this->hasMany(BenefitDelivery::class, 'registered_by_id');
 	}
 }

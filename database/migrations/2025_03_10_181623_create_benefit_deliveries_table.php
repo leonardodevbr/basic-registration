@@ -25,8 +25,8 @@ return new class extends Migration
             $table->string('status')->default('PENDING');
 
             // Optional foreign keys to track which user registered and delivered the benefit
-            $table->foreignId('registered_by')->nullable()->constrained('users');
-            $table->foreignId('delivered_by')->nullable()->constrained('users');
+            $table->foreignId('registered_by_id')->nullable()->constrained('users');
+            $table->foreignId('delivered_by_id')->nullable()->constrained('users');
 
             // Foreign key for the unit (where the benefit is registered or delivered)
             $table->foreignId('unit_id')->nullable()->constrained('units');

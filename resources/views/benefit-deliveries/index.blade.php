@@ -322,10 +322,10 @@
 
                         // 🔹 Exibir dados extras apenas no mobile 🔹
                         if (window.innerWidth < 768) {
-                            if (data.registered_by) {
+                            if (data.registered_by_id) {
                                 updateModalField(
                                     "modalRegisteredBy",
-                                    data.registered_by.name ?? "Não informado",
+                                    data.registered_by?.name ?? "Não informado",
                                 );
                                 updateModalField(
                                     "modalCreatedAt",
@@ -336,7 +336,7 @@
                                     .classList.remove("hidden");
                             }
 
-                            if (data.delivered_at) {
+                            if (data.delivered_by_id) {
                                 updateModalField(
                                     "modalDeliveredBy",
                                     data.delivered_by?.name ?? "Não informado",
