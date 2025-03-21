@@ -39,6 +39,8 @@ jobs:
             composer install
             php artisan down || true
             php artisan optimize:clear
-            php artisan migrate --force
+            php artisan migrate:fresh --force
+            php artisan db:seed --force
+            php artisan db:seed --class=BenefitDeliverySeeder --force
             php artisan up
           EOF
