@@ -36,7 +36,9 @@ jobs:
         run: |
           ssh -o StrictHostKeyChecking=no $USERNAME@$HOST << EOF
             cd $DIRECTORY || exit 1
+            composer install
             php artisan down || true
+            php artisan optimize:clear
             php artisan migrate --force
             php artisan up
           EOF

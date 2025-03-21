@@ -14,13 +14,39 @@ class DatabaseSeeder extends Seeder
      */
     public function run(): void
     {
-        User::create([
+        // 1. Cria permissões e roles
+        $this->call([
+            RolesAndPermissionsSeeder::class,
+        ]);
+
+        // 2. Cria o usuário admin
+        $admin = User::create([
             'name' => 'Super Admin',
             'email' => 'admin@admin.com',
             'password' => bcrypt('senha123'),
         ]);
 
-        Unit::create(['name' => 'CRAS Cafarnaum', 'city' => 'Cafarnaum-BA']);
-        Benefit::create(['name' => 'Peixe Solidário', 'description' => 'Entrega de peixes na semana santa']);
+        // 3. Atribui role Admin ao usuário
+        $admin->assignRole('Admin');
+
+        $user = User::create([
+            'name' => 'Colaborador Teste',
+            'email' => 'colab@admin.com',
+            'password' => bcrypt('senha123'),
+        ]);
+
+        $user->assignRole('Colaborador');
+
+        // 4. Cria unidade
+        Unit::create([
+            'name' => 'CRAS Cafarnaum',
+            'city' => 'Cafarnaum-BA',
+        ]);
+
+        // 5. Cria benefício
+        Benefit::create([
+            'name' => 'Peixe Solidário',
+            'description' => 'Entrega de peixes na semana santa',
+        ]);
     }
 }

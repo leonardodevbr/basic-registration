@@ -131,9 +131,9 @@
                 @endif
 
                 <!-- Dropdown com ações -->
-                <div class="relative">
-                    <button onclick="toggleDropdown(this)"
-                            class="group relative text-gray-600 hover:text-gray-800 pt-1 transition duration-200 transform hover:scale-110 cursor-pointer">
+                <div class="relative dropdown-actions">
+                    <button onclick="toggleDropdown(this.closest('.dropdown-actions'))"
+                            class="group dropdown-button relative text-gray-600 hover:text-gray-800 mt-1 transition duration-200 transform hover:scale-110 cursor-pointer">
                         <i data-lucide="more-vertical" class="w-5 h-5"></i>
                         <span class="tooltip">Mais opções</span>
                     </button>
@@ -142,7 +142,6 @@
                             <button type="submit"
                                     class="group relative block w-full text-left px-4 py-2 text-sm text-red-600 hover:bg-red-50 transition duration-200 transform hover:scale-105 cursor-pointer">
                                 <i data-lucide="trash-2" class="w-4 h-4 inline-block mr-2"></i>Excluir
-                                <span class="tooltip">Excluir registro</span>
                             </button>
                         </form>
                     </div>

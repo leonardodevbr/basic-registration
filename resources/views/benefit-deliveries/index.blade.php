@@ -1080,6 +1080,12 @@
                     }
                 });
 
+                // document.querySelectorAll(".tooltip").forEach((el) => {
+                //     if (el) {
+                //         el.classList.add("hidden");
+                //     }
+                // });
+
                 // Fecha ao clicar fora
                 document.addEventListener("click", function closeDropdown(event) {
                     if (

@@ -52,7 +52,7 @@
 
 .tooltip {
     position: absolute;
-    bottom: -30px; /* Ajuste para exibição abaixo do ícone */
+    top: -30px; /* Ajuste para exibição abaixo do ícone */
     left: 80%;
     transform: translateX(-80%);
     background-color: rgba(0, 0, 0, 0.75);

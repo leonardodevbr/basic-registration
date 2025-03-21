@@ -13,9 +13,6 @@ use Carbon\Carbon;
 
 class BenefitDeliverySeeder extends Seeder
 {
-    /**
-     * Run the database seeds.
-     */
     public function run(): void
     {
         DB::table('benefit_deliveries')->truncate(); // Limpa os dados antes de inserir novos
@@ -23,7 +20,6 @@ class BenefitDeliverySeeder extends Seeder
         $users = User::pluck('id')->toArray();
         $benefits = Benefit::pluck('id')->toArray();
 
-        // Se não houver usuários ou benefícios, criar alguns exemplos
         if (empty($users)) {
             $users = [User::factory()->create()->id];
         }
@@ -62,23 +58,30 @@ class BenefitDeliverySeeder extends Seeder
             "67d3986750b7d.png", "67d44737e0f0f.png"
         ];
 
+        $usedTicketCodes = [];
+
         for ($i = 0; $i < 1000; $i++) {
             $selectedSelfie = fake()->randomElement($selfieFiles);
             $selectedThumb  = fake()->randomElement($thumbFiles);
 
             $random = rand(1, 100);
             if ($random <= 40) {
-                $status = 'PENDING';  // 40%
+                $status = 'PENDING';
             } elseif ($random <= 70) {
-                $status = 'DELIVERED';  // 30%
+                $status = 'DELIVERED';
             } elseif ($random <= 90) {
-                $status = 'EXPIRED';  // 20%
+                $status = 'EXPIRED';
             } else {
-                $status = 'REISSUED';  // 10%
+                $status = 'REISSUED';
             }
 
             $deliveredAt = $status === 'DELIVERED' ? Carbon::now()->subDays(rand(0, 10)) : null;
-            $ticketCode = random_int(100000, 999999);
+
+            // Gera ticket_code único
+            do {
+                $ticketCode = random_int(100000, 999999);
+            } while (in_array($ticketCode, $usedTicketCodes));
+            $usedTicketCodes[] = $ticketCode;
 
             $person = Person::create([
                 'name'        => fake()->name(),
@@ -89,18 +92,18 @@ class BenefitDeliverySeeder extends Seeder
             ]);
 
             BenefitDelivery::create([
-                'benefit_id'    => fake()->randomElement($benefits),
-                'person_id'     => $person->id,
-                'ticket_code'   => $ticketCode,
-                'valid_until'   => Carbon::now()->addDays(rand(-10, 10)),
-                'status'        => $status,
+                'benefit_id'       => fake()->randomElement($benefits),
+                'person_id'        => $person->id,
+                'ticket_code'      => $ticketCode,
+                'valid_until'      => Carbon::now()->addDays(rand(-10, 10)),
+                'status'           => $status,
                 'registered_by_id' => fake()->randomElement($users),
                 'delivered_by_id'  => $deliveredAt ? fake()->randomElement($users) : null,
-                'delivered_at'  => $deliveredAt,
-                'unit_id'       => null,
+                'delivered_at'     => $deliveredAt,
+                'unit_id'          => null,
             ]);
         }
 
-        echo "✅ Seed de 1000 registros gerado com sucesso!";
+        echo "✅ Seed de 1000 registros gerado com ticket_code único!";
     }
 }
