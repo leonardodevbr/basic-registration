@@ -137,26 +137,55 @@
 
                 <!-- Informações do beneficiário -->
                 <div class="flex flex-col items-center space-y-2">
-                    <p
-                        id="modalName"
-                        class="text-lg min-h-[28px] font-bold text-gray-900 bg-gray-200 min-w-[230px] px-4 rounded-md animate-pulse"
-                    ></p>
-                    <p
-                        id="modalTicketCode"
-                        class="text-lg h-[32px] font-semibold text-blue-600 bg-gray-200 min-w-[100px] px-4 rounded-md animate-pulse"
-                    ></p>
+                    <!-- Nome -->
+                    <div class="relative flex items-center justify-center group">
+                        <p id="modalName"
+                           onclick="copyToClipboard(this)"
+                           class="text-lg min-h-[28px] font-bold text-gray-900 cursor-pointer">
+                        </p>
+                        <i data-lucide="copy"
+                           class="absolute right-[-22px] top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400 opacity-0 group-hover:opacity-100 transition-opacity duration-200 md:block hidden pointer-events-none">
+                        </i>
+                    </div>
+
+                    <!-- Ticket Code -->
+                    <div class="relative flex items-center justify-center group">
+                        <p id="modalTicketCode"
+                           onclick="copyToClipboard(this)"
+                           class="text-lg h-[32px] font-semibold text-blue-600 cursor-pointer">
+                        </p>
+                        <i data-lucide="copy"
+                           class="absolute right-[-22px] top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400 opacity-0 group-hover:opacity-100 transition-opacity duration-200 md:block hidden pointer-events-none">
+                        </i>
+                    </div>
+
                     <span
                         id="modalStatus"
                         class="text-xs h-[20px] font-medium px-3 rounded-full bg-gray-300 text-gray-800 animate-pulse min-w-[70px]"
                     ></span>
-                    <p
-                        id="modalCpf"
-                        class="text-sm h-[20px] text-gray-600 bg-gray-200 min-w-[120px] px-4 rounded-md animate-pulse"
-                    ></p>
-                    <p
-                        id="modalPhone"
-                        class="text-sm h-[20px] text-gray-600 bg-gray-200 min-w-[140px] px-4 rounded-md animate-pulse"
-                    ></p>
+
+                    <!-- CPF -->
+                    <div class="relative flex items-center justify-center group">
+                        <p id="modalCpf"
+                           onclick="copyToClipboard(this)"
+                           class="text-sm h-[20px] text-gray-600 cursor-pointer">
+                        </p>
+                        <i data-lucide="copy"
+                           class="absolute right-[-22px] top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400 opacity-0 group-hover:opacity-100 transition-opacity duration-200 md:block hidden pointer-events-none">
+                        </i>
+                    </div>
+
+                    <!-- Telefone -->
+                    <div class="relative flex items-center justify-center group">
+                        <p id="modalPhone"
+                           onclick="copyToClipboard(this)"
+                           class="text-sm h-[20px] text-gray-600 cursor-pointer">
+                        </p>
+                        <i data-lucide="copy"
+                           class="absolute right-[-22px] top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400 opacity-0 group-hover:opacity-100 transition-opacity duration-200 md:block hidden pointer-events-none">
+                        </i>
+                    </div>
+
                     <p
                         id="modalBenefit"
                         class="text-sm h-[20px] text-gray-600 bg-gray-200 min-w-[130px] px-4 rounded-md animate-pulse"
@@ -233,6 +262,49 @@
             const detailsModal = document.getElementById("details-modal");
             let emptyFilterSent = false;
             let lastSubmittedFilter = "";
+
+            function copyToClipboard(el) {
+                let text = el.textContent.trim();
+
+                // Remove prefixos como "CPF: ", "Telefone: ", etc.
+                if (text.includes(":")) {
+                    text = text.split(":").slice(1).join(":").trim();
+                }
+
+                if (!text) return;
+
+                navigator.clipboard.writeText(text).then(() => {
+                    showCopyFeedback(el, 'Copiado!');
+                }).catch(() => {
+                    showCopyFeedback(el, 'Erro ao copiar');
+                });
+            }
+
+            function showCopyFeedback(target, message) {
+                // Remove qualquer feedback anterior
+                const existing = target.parentElement.querySelector('.copy-feedback');
+                if (existing) existing.remove();
+
+                // Cria a div de feedback
+                const feedback = document.createElement('div');
+                feedback.textContent = message;
+                feedback.className = "copy-feedback absolute -top-6 left-1/2 -translate-x-1/2 bg-black text-white text-xs px-2 py-1 rounded shadow z-50 opacity-0 transition-all duration-200";
+
+                // Envolve o texto e o feedback num container relativo
+                target.parentElement.classList.add('relative');
+                target.parentElement.appendChild(feedback);
+
+                // Força o fade-in
+                requestAnimationFrame(() => {
+                    feedback.classList.add('opacity-100');
+                });
+
+                // Remove após 1.5s
+                setTimeout(() => {
+                    feedback.classList.remove('opacity-100');
+                    setTimeout(() => feedback.remove(), 200);
+                }, 1500);
+            }
 
             function openModal(benefitDeliveryId) {
                 const modalImage = document.getElementById("modalImage");
