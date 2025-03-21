@@ -19,7 +19,6 @@
                     <li>Benefícios entregues</li>
                 </ol>
             </nav>
-
             <!-- Container Principal -->
             <div class="bg-white md:shadow-md md:rounded-md mf:p-6 px-3 py-6">
                 <div class="flex justify-between mb-4 flex-col">
@@ -56,15 +55,12 @@
                     <!-- Input do filtro -->
                     <div class="relative w-full">
                         <div class="flex">
-                            <input
-                                type="text"
-                                autocomplete="off"
-                                name="filter"
-                                id="filter"
-                                placeholder="Filtrar por senha, CPF ou nome"
-                                class="border rounded-l px-2 py-1 w-full"
-                                inputmode="numeric"
-                            />
+                            <input id="filter"
+                                   type="text"
+                                   name="filter"
+                                   autocomplete="off"
+                                   class="border rounded-l px-2 py-1 w-full"
+                                   placeholder="Filtrar por senha, CPF ou nome"/>
                             <button type="submit" class="bg-[#1b1b18] hover:bg-[#1b1b02] text-center text-white px-4 py-2 rounded-r">Filtrar</button>
                         </div>
                         <label
@@ -234,6 +230,8 @@
             const loadingOverlay = document.getElementById("loading-overlay");
             const filterError = document.getElementById("filter-error");
             const detailsModal = document.getElementById("details-modal");
+            let emptyFilterSent = false;
+            let lastSubmittedFilter = "";
 
             function openModal(benefitDeliveryId) {
                 const modalImage = document.getElementById("modalImage");
@@ -712,10 +710,9 @@
             }
 
             function attachFilterEvents() {
-                document
-                    .getElementById("filter-form")
-                    .addEventListener("submit", async function (e) {
+                filterForm.addEventListener("submit", async function (e) {
                         e.preventDefault();
+                        filterInput.blur();
 
                         const filter = document
                             .getElementById("filter")
@@ -1070,6 +1067,7 @@
                     if (value.trim() === "") {
                         lastSubmittedFilter = "";
                         if (!emptyFilterSent) {
+                            filterInput.blur();
                             emptyFilterSent = true;
                             filterError.classList.add("hidden");
                             loadingOverlay.classList.remove("hidden");
@@ -1082,6 +1080,10 @@
                                 })
                                 .finally(() => {
                                     loadingOverlay.classList.add("hidden");
+                                    attachFilterEvents(); // Chamar a função ao carregar a página
+                                    attachPaginationEvents(); // Chamar a função ao carregar a página
+                                    attachRowsEvents();
+                                    attachDeleteEvents(); // Chama a função ao carregar a página
                                 });
                         }
                     } else {
