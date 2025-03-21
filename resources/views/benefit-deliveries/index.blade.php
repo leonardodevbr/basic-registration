@@ -141,7 +141,7 @@
                     <div class="relative flex items-center justify-center group">
                         <p id="modalName"
                            onclick="copyToClipboard(this)"
-                           class="text-lg min-h-[28px] font-bold text-gray-900 cursor-pointer">
+                           class="text-lg min-h-[28px] font-bold text-gray-900 cursor-pointer select-none">
                         </p>
                         <i data-lucide="copy"
                            class="absolute right-[-22px] top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400 opacity-0 group-hover:opacity-100 transition-opacity duration-200 md:block hidden pointer-events-none">
@@ -152,7 +152,7 @@
                     <div class="relative flex items-center justify-center group">
                         <p id="modalTicketCode"
                            onclick="copyToClipboard(this)"
-                           class="text-lg h-[32px] font-semibold text-blue-600 cursor-pointer">
+                           class="text-lg h-[32px] font-semibold text-blue-600 cursor-pointer select-none">
                         </p>
                         <i data-lucide="copy"
                            class="absolute right-[-22px] top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400 opacity-0 group-hover:opacity-100 transition-opacity duration-200 md:block hidden pointer-events-none">
@@ -168,7 +168,7 @@
                     <div class="relative flex items-center justify-center group">
                         <p id="modalCpf"
                            onclick="copyToClipboard(this)"
-                           class="text-sm h-[20px] text-gray-600 cursor-pointer">
+                           class="text-sm h-[20px] text-gray-600 cursor-pointer select-none">
                         </p>
                         <i data-lucide="copy"
                            class="absolute right-[-22px] top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400 opacity-0 group-hover:opacity-100 transition-opacity duration-200 md:block hidden pointer-events-none">
@@ -179,17 +179,23 @@
                     <div class="relative flex items-center justify-center group">
                         <p id="modalPhone"
                            onclick="copyToClipboard(this)"
-                           class="text-sm h-[20px] text-gray-600 cursor-pointer">
+                           class="text-sm h-[20px] text-gray-600 cursor-pointer select-none">
                         </p>
                         <i data-lucide="copy"
                            class="absolute right-[-22px] top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400 opacity-0 group-hover:opacity-100 transition-opacity duration-200 md:block hidden pointer-events-none">
                         </i>
                     </div>
 
-                    <p
-                        id="modalBenefit"
-                        class="text-sm h-[20px] text-gray-600 bg-gray-200 min-w-[130px] px-4 rounded-md animate-pulse"
-                    ></p>
+                    <!-- Telefone -->
+                    <div class="relative flex items-center justify-center group">
+                        <p id="modalBenefit"
+                           onclick="copyToClipboard(this)"
+                           class="text-sm h-[20px] text-gray-600 bg-gray-200 min-w-[130px] px-4 rounded-md animate-pulse cursor-pointer select-none">
+                        </p>
+                        <i data-lucide="copy"
+                           class="absolute right-[-22px] top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400 opacity-0 group-hover:opacity-100 transition-opacity duration-200 md:block hidden pointer-events-none">
+                        </i>
+                    </div>
 
                     <!-- Dados de Registro -->
                     <div
@@ -431,6 +437,7 @@
                         console.error("Erro ao carregar os detalhes:", error);
                         alert("Erro ao carregar os detalhes. Tente novamente.");
                     });
+                updateModalState();
             }
 
             function addActionButtons(status, benefitDeliveryId) {
@@ -477,11 +484,13 @@
 
                 imageModalContent.src = imageUrl;
                 imageModal.classList.remove("hidden");
+                updateModalState();
             }
 
             // 🔹 Função para fechar o modal da imagem 🔹
             function closeImageModal() {
                 document.getElementById("imageModal").classList.add("hidden");
+                updateModalState();
             }
 
             // 🔹 Função auxiliar para formatar data e hora 🔹
@@ -553,6 +562,7 @@
                 statusElement.innerText = "";
                 statusElement.className =
                     "text-xs h-[20px] min-w-[70px] font-medium px-3 rounded-full bg-gray-300 text-gray-800 animate-pulse";
+                updateModalState();
             }
 
             // Formatar CPF
@@ -590,12 +600,21 @@
                 return badges[status] || "bg-gray-300 text-gray-800";
             }
 
+            function updateModalState() {
+                const modals = document.querySelectorAll('.modal, [data-modal]');
+                const isAnyOpen = Array.from(modals).some(modal => !modal.classList.contains('hidden'));
+
+                document.body.classList.toggle('overflow-hidden', isAnyOpen);
+            }
+
             function confirmDelivery(deliveryId) {
                 Swal.fire({
                     title: "Confirmar Entrega?",
                     text: "Tem certeza de que deseja dar baixa nesta entrega?",
                     icon: "warning",
                     showCancelButton: true,
+                    allowOutsideClick: false, // 🔒 Impede clique fora
+                    allowEscapeKey: false,    // 🔒 Impede ESC fechar
                     confirmButtonColor: "#3085d6",
                     cancelButtonColor: "#d33",
                     confirmButtonText: "Sim, dar baixa!",
@@ -615,6 +634,8 @@
                                 if (data.success) {
                                     detailsModal.classList.add('hidden');
                                     Swal.fire({
+                                        allowOutsideClick: false, // 🔒 Impede clique fora
+                                        allowEscapeKey: false,    // 🔒 Impede ESC fechar
                                         icon: "success",
                                         title: "Entrega Confirmada",
                                         text: data.message,
@@ -633,6 +654,8 @@
                                     });
                                 } else {
                                     Swal.fire({
+                                        allowOutsideClick: false, // 🔒 Impede clique fora
+                                        allowEscapeKey: false,    // 🔒 Impede ESC fechar
                                         icon: "error",
                                         title: "Erro",
                                         text: data.message,
@@ -646,6 +669,8 @@
                                     error,
                                 );
                                 Swal.fire({
+                                    allowOutsideClick: false, // 🔒 Impede clique fora
+                                    allowEscapeKey: false,    // 🔒 Impede ESC fechar
                                     icon: "error",
                                     title: "Erro Inesperado",
                                     text: "Ocorreu um erro inesperado. Tente novamente mais tarde.",
@@ -662,6 +687,8 @@
                     text: "Tem certeza de que deseja gerar um novo ticket para esta entrega?",
                     icon: "warning",
                     showCancelButton: true,
+                    allowOutsideClick: false, // 🔒 Impede clique fora
+                    allowEscapeKey: false,    // 🔒 Impede ESC fechar
                     cancelButtonText: "Cancelar",
                     confirmButtonText: "Sim, reemitir!",
                     confirmButtonColor: "#f59e0b", // Amarelo
@@ -684,6 +711,8 @@
                             .then((data) => {
                                 if (data.success) {
                                     Swal.fire({
+                                        allowOutsideClick: false, // 🔒 Impede clique fora
+                                        allowEscapeKey: false,    // 🔒 Impede ESC fechar
                                         icon: "success",
                                         title: "Ticket Reemitido",
                                         text: data.message,
@@ -694,6 +723,8 @@
                                     reloadTableContent(window.location.href);
                                 } else {
                                     Swal.fire({
+                                        allowOutsideClick: false, // 🔒 Impede clique fora
+                                        allowEscapeKey: false,    // 🔒 Impede ESC fechar
                                         icon: "error",
                                         title: "Erro",
                                         text: data.message,
@@ -704,6 +735,8 @@
                             .catch((error) => {
                                 console.error("Erro ao reemitir ticket:", error);
                                 Swal.fire({
+                                    allowOutsideClick: false, // 🔒 Impede clique fora
+                                    allowEscapeKey: false,    // 🔒 Impede ESC fechar
                                     icon: "error",
                                     title: "Erro Inesperado",
                                     text: "Ocorreu um erro inesperado. Tente novamente mais tarde.",
@@ -727,6 +760,8 @@
                             text: "Tem certeza de que deseja excluir este registro? Essa ação não pode ser desfeita.",
                             icon: "warning",
                             showCancelButton: true,
+                            allowOutsideClick: false, // 🔒 Impede clique fora
+                            allowEscapeKey: false,    // 🔒 Impede ESC fechar
                             confirmButtonColor: "#d33",
                             cancelButtonColor: "#6c757d",
                             confirmButtonText: "Sim, excluir!",
@@ -751,6 +786,8 @@
                                             attachFilterEvents();
                                             row.remove();
                                             Swal.fire({
+                                                allowOutsideClick: false, // 🔒 Impede clique fora
+                                                allowEscapeKey: false,    // 🔒 Impede ESC fechar
                                                 icon: "success",
                                                 title: "Registro Excluído",
                                                 text: data.message,
@@ -758,6 +795,8 @@
                                             });
                                         } else {
                                             Swal.fire({
+                                                allowOutsideClick: false, // 🔒 Impede clique fora
+                                                allowEscapeKey: false,    // 🔒 Impede ESC fechar
                                                 icon: "error",
                                                 title: "Erro",
                                                 text:
@@ -770,6 +809,8 @@
                                     .catch((error) => {
                                         console.error("Erro ao excluir:", error);
                                         Swal.fire({
+                                            allowOutsideClick: false, // 🔒 Impede clique fora
+                                            allowEscapeKey: false,    // 🔒 Impede ESC fechar
                                             icon: "error",
                                             title: "Erro Inesperado",
                                             text: "Ocorreu um erro inesperado. Tente novamente.",
@@ -794,6 +835,8 @@
                         // 🔥 Bloqueia pesquisas com menos de 3 caracteres, exceto quando limpando
                         if (filter.length < 3) {
                             Swal.fire({
+                                allowOutsideClick: false, // 🔒 Impede clique fora
+                                allowEscapeKey: false,    // 🔒 Impede ESC fechar
                                 icon: "warning",
                                 title: "Atenção",
                                 text: "Digite pelo menos 3 caracteres para pesquisar.",
@@ -842,6 +885,8 @@
                                 attachFilterEvents();
                             } else {
                                 Swal.fire({
+                                    allowOutsideClick: false, // 🔒 Impede clique fora
+                                    allowEscapeKey: false,    // 🔒 Impede ESC fechar
                                     icon: "error",
                                     title: "Erro",
                                     text:
@@ -852,6 +897,8 @@
                         } catch (error) {
                             console.error("Erro ao filtrar:", error);
                             Swal.fire({
+                                allowOutsideClick: false, // 🔒 Impede clique fora
+                                allowEscapeKey: false,    // 🔒 Impede ESC fechar
                                 icon: "error",
                                 title: "Erro",
                                 text: "Não foi possível carregar os registros filtrados. Tente novamente.",
@@ -931,6 +978,8 @@
 
                 if (code.length !== 6) {
                     Swal.fire({
+                        allowOutsideClick: false, // 🔒 Impede clique fora
+                        allowEscapeKey: false,    // 🔒 Impede ESC fechar
                         icon: "warning",
                         title: "Atenção",
                         text: "Insira um código de 6 dígitos.",
@@ -969,6 +1018,8 @@
 
                     // ✅ Sucesso: exibe mensagem e recarrega a tabela
                     Swal.fire({
+                        allowOutsideClick: false, // 🔒 Impede clique fora
+                        allowEscapeKey: false,    // 🔒 Impede ESC fechar
                         icon: "success",
                         title: "Baixa Registrada",
                         text: data.message,
@@ -996,6 +1047,8 @@
                 } catch (error) {
                     console.error("Erro:", error);
                     Swal.fire({
+                        allowOutsideClick: false, // 🔒 Impede clique fora
+                        allowEscapeKey: false,    // 🔒 Impede ESC fechar
                         icon: "error",
                         title: "Erro",
                         text: error.message || "Ocorreu um erro inesperado. Tente novamente mais tarde.",
@@ -1063,6 +1116,8 @@
                         } else {
                             console.error("Erro ao carregar tabela:", data);
                             Swal.fire({
+                                allowOutsideClick: false, // 🔒 Impede clique fora
+                                allowEscapeKey: false,    // 🔒 Impede ESC fechar
                                 icon: "error",
                                 title: "Erro",
                                 text: "Ocorreu um erro ao carregar a tabela.",
@@ -1093,6 +1148,8 @@
                             quickDelivery(); // Chama a função de baixa rápida
                         } else {
                             Swal.fire({
+                                allowOutsideClick: false, // 🔒 Impede clique fora
+                                allowEscapeKey: false,    // 🔒 Impede ESC fechar
                                 icon: "warning",
                                 title: "Atenção",
                                 text: "Insira um código de 6 dígitos.",

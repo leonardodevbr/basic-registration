@@ -248,6 +248,8 @@
                             title: 'Atenção!',
                             text: "Nenhum registro encontrado para essa pesquisa. Solicite os dados para o cadastro.",
                             icon: 'info',
+                            allowOutsideClick: false, // 🔒 Impede clique fora
+                            allowEscapeKey: false,    // 🔒 Impede ESC fechar
                             confirmButtonColor: '#3085d6',
                             confirmButtonText: 'Ok'
                         }).then(() => {
@@ -417,10 +419,10 @@
 
                     // Exibe um alerta de carregamento (SweetAlert)
                     Swal.fire({
+                        allowOutsideClick: false, // 🔒 Impede clique fora
+                        allowEscapeKey: false,    // 🔒 Impede ESC fechar
                         title: 'Enviando...',
                         text: 'Por favor, aguarde.',
-                        allowOutsideClick: false,
-                        allowEscapeKey: false,
                         didOpen: () => {
                             Swal.showLoading();
                         }
@@ -474,6 +476,8 @@
                                 icon: 'error',
                                 title: 'Erro de Validação',
                                 html: errorHtml,
+                                allowOutsideClick: false, // 🔒 Impede clique fora
+                                allowEscapeKey: false,    // 🔒 Impede ESC fechar
                                 confirmButtonText: 'OK'
                             });
                         } else {
@@ -486,6 +490,8 @@
                             Swal.fire({
                                 icon: 'success',
                                 title: message,
+                                allowOutsideClick: false, // 🔒 Impede clique fora
+                                allowEscapeKey: false,    // 🔒 Impede ESC fechar
                                 html: `
                     <div class="flex flex-col">
                         <small>Senha:</small>
@@ -510,6 +516,8 @@
                         console.error('Erro ao enviar formulário:', error);
                         Swal.fire({
                             icon: 'error',
+                            allowOutsideClick: false, // 🔒 Impede clique fora
+                            allowEscapeKey: false,    // 🔒 Impede ESC fechar
                             title: 'Erro Inesperado',
                             text: 'Ocorreu um erro inesperado. Tente novamente mais tarde.',
                             confirmButtonText: 'OK'
