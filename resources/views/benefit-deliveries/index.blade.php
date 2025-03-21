@@ -91,6 +91,7 @@
             <h2 class="text-xl font-bold mb-4">Entrega Rápida</h2>
             <input
                 type="text"
+                inputmode="numeric"
                 id="quick-delivery-code"
                 placeholder="Digite o código do ticket"
                 class="border rounded w-full p-2 mb-4"
