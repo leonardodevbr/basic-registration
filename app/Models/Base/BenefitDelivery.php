@@ -70,16 +70,6 @@ class BenefitDelivery extends Model
 		return $this->belongsTo(Benefit::class);
 	}
 
-	public function registeredBy(): BelongsTo
-	{
-		return $this->belongsTo(User::class, 'registered_by_id');
-	}
-
-	public function deliveredBy(): BelongsTo
-	{
-		return $this->belongsTo(User::class, 'delivered_by_id');
-	}
-
 	public function person(): BelongsTo
 	{
 		return $this->belongsTo(Person::class);

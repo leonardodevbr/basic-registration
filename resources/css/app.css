@@ -2,6 +2,10 @@
 @tailwind components;
 @tailwind utilities;
 
+[x-cloak] {
+    display: none !important;
+}
+
 #loading-overlay {
     position: fixed;
     top: 0;
@@ -81,4 +85,18 @@
 
 .animate-fade-in-out {
     animation: fadeInOut 1.8s ease-in-out forwards;
+}
+
+
+/* Caso o container da tabela tenha overflow oculto */
+.overflow-x-auto {
+    overflow: visible;
+}
+
+table {
+    overflow: visible;
+}
+
+tr {
+    position: relative;
 }

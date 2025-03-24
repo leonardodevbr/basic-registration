@@ -2,6 +2,7 @@
 
 namespace App\Providers;
 
+use Illuminate\Support\Facades\Blade;
 use Illuminate\Support\Facades\Gate;
 use Illuminate\Support\ServiceProvider;
 
@@ -21,11 +22,15 @@ class AppServiceProvider extends ServiceProvider
     public function boot(): void
     {
         Gate::before(function ($user, $ability) {
-            if ($user->hasRole('Admin')) {
-                return true;
+            if ($user && $user->hasRole('SuperAdmin')) {
+                return true; // Ignora todas as permissões, libera tudo
             }
 
-            return null;
+            return null; // Continua fluxo normal
+        });
+
+        Blade::if('superadmin', function () {
+            return auth()->check() && auth()->user()->hasRole('SuperAdmin');
         });
     }
 }

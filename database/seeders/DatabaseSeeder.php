@@ -14,37 +14,40 @@ class DatabaseSeeder extends Seeder
      */
     public function run(): void
     {
-        // 1. Cria permissões e roles
-        $this->call([
-            RolesAndPermissionsSeeder::class,
-        ]);
-
-        // 2. Cria o usuário admin
-        $admin = User::create([
-            'name' => 'Super Admin',
-            'email' => 'admin@admin.com',
-            'password' => bcrypt('senha123'),
-        ]);
-
-        // 3. Atribui role Admin ao usuário
-        $admin->assignRole('Admin');
-
-        $user = User::create([
-            'name' => 'Colaborador Teste',
-            'email' => 'colab@admin.com',
-            'password' => bcrypt('senha123'),
-        ]);
-
-        $user->assignRole('Colaborador');
-
-        // 4. Cria unidade
-        Unit::create([
+        $unit = Unit::create([
             'name' => 'CRAS Cafarnaum',
             'city' => 'Cafarnaum-BA',
         ]);
 
-        // 5. Cria benefício
+        $this->call([
+            RolesAndPermissionsSeeder::class,
+        ]);
+
+        $superAdmin = User::create([
+            'name' => 'Super Admin',
+            'email' => 'super@admin.com',
+            'password' => bcrypt('senha123'),
+        ]);
+        $superAdmin->assignRole('SuperAdmin');
+
+        $admin = User::create([
+            'unit_id' => $unit->id,
+            'name' => 'Admin Teste',
+            'email' => 'admin@admin.com',
+            'password' => bcrypt('senha123'),
+        ]);
+        $admin->assignRole('Admin');
+
+        $user = User::create([
+            'unit_id' => $unit->id,
+            'name' => 'Colaborador Teste',
+            'email' => 'colab@admin.com',
+            'password' => bcrypt('senha123'),
+        ]);
+        $user->assignRole('Colaborador');
+
         Benefit::create([
+            'unit_id' => $unit->id,
             'name' => 'Peixe Solidário',
             'description' => 'Entrega de peixes na semana santa',
         ]);

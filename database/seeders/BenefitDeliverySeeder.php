@@ -25,7 +25,7 @@ class BenefitDeliverySeeder extends Seeder
         }
 
         if (empty($benefits)) {
-            $benefits = [Benefit::factory()->create(['name' => 'Peixe Solidário'])->id];
+            $benefits = [Benefit::factory()->create(['name' => 'Peixe Solidário', 'unit_id' => 1])->id];
         }
 
         // Lista fixa de selfies
@@ -100,7 +100,7 @@ class BenefitDeliverySeeder extends Seeder
                 'registered_by_id' => fake()->randomElement($users),
                 'delivered_by_id'  => $deliveredAt ? fake()->randomElement($users) : null,
                 'delivered_at'     => $deliveredAt,
-                'unit_id'          => null,
+                'unit_id'          => 1,
             ]);
         }
 

@@ -1,12 +1,32 @@
 <?php
 
-namespace App\Models;
+namespace App\Console\Commands;
 
-use App\Models\Base\Person as BasePerson;
+use Illuminate\Console\Command;
+use Illuminate\Support\Facades\File;
 
-class Person extends BasePerson
+class InjectPersonAccessors extends Command
 {
+    protected $signature = 'inject:person-accessors';
+    protected $description = 'Injeta os accessors e appends customizados no model Person.php';
 
+    public function handle(): void
+    {
+        $modelPath = app_path('Models/Person.php');
+
+        if (!File::exists($modelPath)) {
+            $this->error('Model Person.php não encontrado.');
+            return;
+        }
+
+        $content = File::get($modelPath);
+
+        if (str_contains($content, 'getSelfieUrlAttribute')) {
+            $this->info('Accessors já estão presentes no model.');
+            return;
+        }
+
+        $injection = <<<'EOD'
 
     protected $appends = [
         'selfie_url',
@@ -43,5 +63,13 @@ class Person extends BasePerson
         $object = $bucket->object($path);
 
         return $object->signedUrl(new \DateTime('5 minutes'), ['version' => 'v4']);
+    }
+EOD;
+
+        $updated = preg_replace('/}\s*$/', $injection . "\n}", $content);
+
+        File::put($modelPath, $updated);
+
+        $this->info('Accessors e appends adicionados ao model Person com sucesso.');
     }
 }

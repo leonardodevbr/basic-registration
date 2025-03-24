@@ -30,7 +30,7 @@
                 <!-- Permissions Management -->
                 @can('manage roles and permissions')
                     <div class="hidden space-x-8 sm:-my-px sm:ms-10 sm:flex">
-                        <x-nav-link :href="route('roles.index')" :active="request()->routeIs('roles.*') || request()->routeIs('permissions.*')">
+                        <x-nav-link :href="route('access-control.roles')" :active="request()->routeIs('roles.*') || request()->routeIs('permissions.*')">
                             {{ __('Controle de Acesso') }}
                         </x-nav-link>
                     </div>
@@ -106,7 +106,7 @@
                 </x-responsive-nav-link>
             @endcan
             @can('manage roles and permissions')
-                <x-responsive-nav-link :href="route('roles.index')" :active="request()->routeIs('roles.*') || request()->routeIs('permissions.*')">
+                <x-responsive-nav-link :href="route('access-control.roles')" :active="request()->routeIs('roles.*') || request()->routeIs('permissions.*')">
                     {{ __('Controle de Acesso') }}
                 </x-responsive-nav-link>
             @endcan

@@ -13,6 +13,7 @@ return new class extends Migration
     {
         Schema::create('benefits', function (Blueprint $table) {
             $table->id();
+            $table->foreignId('unit_id')->nullable()->constrained('units');
             $table->string('name');
             $table->text('description');
             $table->timestamps();

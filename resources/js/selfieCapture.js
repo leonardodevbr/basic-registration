@@ -107,7 +107,7 @@ document.addEventListener("DOMContentLoaded", async () => {
 
             const offsetX = Math.abs(faceCenterX - canvasCenterX);
             const offsetY = Math.abs(faceCenterY - canvasCenterY);
-            isCentered = offsetX < 20 && offsetY < 20;
+            isCentered = offsetX < 50 && offsetY < 50;
 
             const leftEye = faceLandmarks[33];
             const rightEye = faceLandmarks[263];

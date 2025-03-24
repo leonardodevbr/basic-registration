@@ -1,3 +1,4 @@
+{{--resources/views/benefit-deliveries/_table_body.blade.php--}}
 @foreach($deliveries as $benefitDelivery)
     <tr class="border-b hover:bg-gray-50" data-code="{{ $benefitDelivery->ticket_code }}">
         <td class="py-4 pr-2 md:px-6 whitespace-nowrap cursor-pointer">

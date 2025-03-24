@@ -6,7 +6,9 @@
 
 namespace App\Models\Base;
 
+use App\Models\Benefit;
 use App\Models\BenefitDelivery;
+use App\Models\User;
 use Carbon\Carbon;
 use Illuminate\Database\Eloquent\Collection;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
@@ -23,6 +25,8 @@ use Illuminate\Database\Eloquent\Relations\HasMany;
  * @property Carbon|null $updated_at
  * 
  * @property Collection|BenefitDelivery[] $benefit_deliveries
+ * @property Collection|Benefit[] $benefits
+ * @property Collection|User[] $users
  *
  * @package App\Models\Base
  */
@@ -39,5 +43,15 @@ class Unit extends Model
 	public function benefit_deliveries(): HasMany
 	{
 		return $this->hasMany(BenefitDelivery::class);
+	}
+
+	public function benefits(): HasMany
+	{
+		return $this->hasMany(Benefit::class);
+	}
+
+	public function users(): HasMany
+	{
+		return $this->hasMany(User::class);
 	}
 }

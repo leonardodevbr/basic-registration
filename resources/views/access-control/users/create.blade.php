@@ -1,4 +1,4 @@
-{{--resources/views/benefit-deliveries/edit.blade.php--}}
+{{-- resources/views/access-control/users/create.blade.php --}}
 <x-app-layout>
     <div class="md:py-12">
         <div class="max-w-7xl mx-auto sm:px-6 lg:px-8">
@@ -6,15 +6,15 @@
                 <ol class="list-reset flex">
                     <li><a href="{{ route('dashboard') }}" class="text-indigo-600 hover:text-indigo-800">Dashboard</a></li>
                     <li><span class="mx-2">/</span></li>
-                    <li><a href="{{ route('benefit-deliveries.index') }}" class="text-indigo-600 hover:text-indigo-800">Gestão de Benefícios</a></li>
+                    <li><a href="{{ route('access-control.users') }}" class="text-indigo-600 hover:text-indigo-800">Controle de Acesso</a></li>
                     <li><span class="mx-2">/</span></li>
-                    <li>Editar</li>
+                    <li>Cadastrar Usuário</li>
                 </ol>
             </nav>
 
             <div class="bg-white md:shadow-md md:rounded-md p-6">
-                <h2 class="text-xl font-semibold mb-4">Editar entrega de benefício</h2>
-                @include('benefit-deliveries.form', ['action' => route('benefit-deliveries.update', $benefitDelivery->id), 'method' => 'PUT', 'benefit_delivery' => $benefitDelivery])
+                <h2 class="text-xl font-semibold mb-4">Cadastrar Usuário</h2>
+                @include('access-control.users.form', ['action' => route('users.store'), 'method' => 'POST'])
             </div>
         </div>
     </div>

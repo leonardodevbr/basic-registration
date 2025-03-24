@@ -1,3 +1,4 @@
+{{--resources/views/benefit-deliveries/form.blade.php--}}
 @if($errors->any())
     <div class="mb-4 p-4 bg-red-100 text-red-700 rounded">
         <ul>

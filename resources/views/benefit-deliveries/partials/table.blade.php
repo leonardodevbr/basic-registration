@@ -1,3 +1,4 @@
+{{--resources/views/benefit-deliveries/partials/table.blade.php--}}
 <div class="overflow-x-auto pb-4">
     <table class="divide-y divide-gray-200 w-full">
         <thead class="bg-gray-50">

@@ -291,7 +291,12 @@ return [
             'cache_locks',
             'jobs',
             'job_batches',
-            'sessions'
+            'sessions',
+            'role_has_permissions',
+            'model_has_roles',
+            'model_has_permissions',
+            'roles',
+            'permissions',
         ],
 
         /*
@@ -527,8 +532,12 @@ return [
     '@connections' => [
         'mysql' => [
             'users' => [
-                'parent' => Illuminate\Foundation\Auth\User::class
-            ],
+                'parent' => Illuminate\Foundation\Auth\User::class,
+                'use' => [
+                    Spatie\Permission\Traits\HasPermissions::class,
+                    Spatie\Permission\Traits\HasRoles::class
+                ],
+            ]
         ],
     ],
 ];
