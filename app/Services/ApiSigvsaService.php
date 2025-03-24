@@ -56,9 +56,13 @@ class ApiSigvsaService
             return response()->json(['error' => 'Autenticação falhou'], 401);
         }
 
-        $queryParam = (preg_match('/^\d{11}$/', preg_replace('/\D/', '', $filtro)))
-            ? ['cpf' => preg_replace('/\D/', '', $filtro)]
-            : ['nome' => $filtro];
+        $termo = trim($filtro);
+
+        if (preg_match('/^\d{3}/', $termo)) {
+            $termo = preg_replace('/\D/', '', $termo);
+        }
+
+        $queryParam = ['termo' => $termo];
 
         $response = Http::withToken($token)
             ->acceptJson()

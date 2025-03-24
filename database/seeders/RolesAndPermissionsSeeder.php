@@ -24,6 +24,14 @@ class RolesAndPermissionsSeeder extends Seeder
                 'delete benefit deliveries',
             ],
 
+            // Módulo: Entregas de Benefícios
+            'Unidades' => [
+                'view unities',
+                'create unities',
+                'update unities',
+                'delete unities',
+            ],
+
             // Módulo: Usuários
             'Usuários' => [
                 'view users',

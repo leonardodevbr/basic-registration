@@ -8,6 +8,7 @@ use App\Jobs\ProcessSelfieImage;
 use App\Models\Benefit;
 use App\Models\BenefitDelivery;
 use App\Models\Person;
+use App\Models\Unit;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Cache;
 use Illuminate\Support\Facades\View;
@@ -63,7 +64,8 @@ class BenefitDeliveryController extends Controller
     public function create()
     {
         $benefits = Benefit::all();
-        return view('benefit-deliveries.create', compact('benefits'));
+        $unities = Unit::all();
+        return view('benefit-deliveries.create', compact('benefits', 'unities'));
     }
 
     public function store(BenefitDeliveryStoreRequest $request)
@@ -129,7 +131,7 @@ class BenefitDeliveryController extends Controller
             'status' => 'PENDING',
             'registered_by_id' => auth()->check() ? auth()->user()->id : null,
             'delivered_at' => null,
-            'unit_id' => $inputData['unit_id'] ?? null,
+            'unit_id' => auth()->user()->unit_id ?? $inputData['unit_id'] ?? null
         ]);
 
         return response()->json([
@@ -145,8 +147,14 @@ class BenefitDeliveryController extends Controller
 
     public function edit(BenefitDelivery $benefitDelivery)
     {
-        $benefits = Benefit::all();
-        return view('benefit-deliveries.edit', compact('benefitDelivery', 'benefits'));
+        $benefits = Benefit::when(auth()->user()->can('update unities'), function ($query) {
+            $query->when(!empty(auth()->user()->unit_id), function ($q) {
+                $q->where('unit_id', auth()->user()->unit_id);
+            });
+        })
+            ->get();
+        $unities = Unit::all();
+        return view('benefit-deliveries.edit', compact('benefitDelivery', 'benefits', 'unities'));
     }
 
     public function update(BenefitDeliveryUpdateRequest $request, BenefitDelivery $benefitDelivery)
@@ -169,6 +177,8 @@ class BenefitDeliveryController extends Controller
         }
 
         // 🔹 2️⃣ Atualizar os dados da pessoa (exceto CPF)
+
+
         $person->update([
             'name' => $inputData['person']['name'],
             'phone' => $inputData['person']['phone'] ?? $person->phone,
@@ -200,9 +210,13 @@ class BenefitDeliveryController extends Controller
         }
 
         // 🔹 4️⃣ Atualizar a entrega do benefício
-        $benefitDelivery->update([
-            'benefit_id' => $inputData['benefit_id'],
-        ]);
+        $dataToUpdate = [
+            'benefit_id' => $inputData['benefit_id']
+        ];
+        if(!empty($inputData['unit_id']) && auth()->user()->can('update unities')){
+            $dataToUpdate['unit_id'] = $inputData['unit_id'];
+        }
+        $benefitDelivery->update($dataToUpdate);
 
         return response()->json([
             'success' => true,

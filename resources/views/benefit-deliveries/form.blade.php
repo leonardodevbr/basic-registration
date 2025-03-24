@@ -83,6 +83,19 @@
                 </select>
             </div>
 
+            @can('view unities')
+                <div class="mb-4">
+                    <label class="block">Unidade:</label>
+                    <select name="unit_id" class="border rounded w-full p-2">
+                        @foreach($unities as $unit)
+                            <option value="{{ $unit->id }}" {{ old('unit_id', $benefitDelivery->unit_id ?? '') == $unit->id ? 'selected' : '' }}>
+                                {{ $unit->name }}
+                            </option>
+                        @endforeach
+                    </select>
+                </div>
+            @endcan
+
             <!-- (Opcional) Campo unit_id se necessário -->
             <button type="submit" id="save-btn" class="w-full px-4 py-2 bg-indigo-500 text-white rounded">Salvar</button>
             <a class="w-full px-4 py-2 bg-gray-500 text-white rounded text-center mt-2" href="{{ route('benefit-deliveries.index') }}">
@@ -103,8 +116,8 @@
         <div class="bg-white lg:p-6 px-3 py-4 rounded-lg shadow-lg w-96">
             <h2 class="text-lg font-semibold mb-4">Buscar Pessoa</h2>
 
-            <label class="block mb-2">Digite o CPF ou Nome:</label>
-            <input type="text" id="searchInput" autocomplete="off" class="border rounded w-full p-2" placeholder="Digite o CPF ou Nome">
+            <label class="block mb-2">Nome, NIS ou CPF:</label>
+            <input type="text" id="searchInput" autocomplete="off" class="border rounded w-full p-2">
             <div id="search-error" class="text-red-500 text-sm mt-2 hidden"></div>
 
             <div class="flex justify-between mt-4">
@@ -154,28 +167,6 @@
                 searchInput.focus();
             }
 
-            // Aplica máscara no CPF ao digitar
-            searchInput?.addEventListener("input", function () {
-                let value = searchInput.value;
-
-                // Verifica se o primeiro caractere digitado é um número (indica CPF)
-                if (/^\d/.test(value)) {
-                    value = value.replace(/\D/g, ""); // Remove tudo que não for número
-
-                    // Aplica a máscara do CPF
-                    if (value.length > 3) value = value.replace(/^(\d{3})(\d)/, "$1.$2");
-                    if (value.length > 6) value = value.replace(/^(\d{3})\.(\d{3})(\d)/, "$1.$2.$3");
-                    if (value.length > 9) value = value.replace(/^(\d{3})\.(\d{3})\.(\d{3})(\d)/, "$1.$2.$3-$4");
-
-                    // Limita o campo a 14 caracteres no formato de CPF (000.000.000-00)
-                    if (value.length > 14) {
-                        value = value.slice(0, 14);
-                    }
-                }
-
-                searchInput.value = value; // Atualiza o campo
-            });
-
             searchInput?.addEventListener("keypress", async function (e) {
                 if (e.key === "Enter") {
                     e.preventDefault(); // Evita o comportamento padrão (como submeter o formulário)
@@ -195,7 +186,6 @@
                     await buscarPessoa(filtro);
                 }
             });
-
 
             // Botão para buscar pessoa
             searchBtn?.addEventListener("click", async function () {
