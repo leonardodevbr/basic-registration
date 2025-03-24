@@ -15,7 +15,7 @@ use Rap2hpoutre\LaravelLogViewer\LogViewerController;
 Route::get('/', fn() => redirect()->route('login'));
 
 Route::get('logs', [LogViewerController::class, 'index'])
-    ->middleware(['auth', 'role:Admin']);
+    ->middleware(['auth', 'role:SuperAdmin']);
 
 Route::middleware(['auth'])->group(function () {
     Route::get('/dashboard', [DashboardController::class, 'index'])
