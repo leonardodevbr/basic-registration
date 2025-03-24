@@ -2,7 +2,7 @@
 
 namespace App\Jobs;
 
-//use App\Models\BenefitDelivery;
+use App\Models\BenefitDelivery;
 use Illuminate\Bus\Queueable;
 use Illuminate\Contracts\Queue\ShouldQueue;
 use Illuminate\Foundation\Bus\Dispatchable;
@@ -16,8 +16,8 @@ class ExpireBenefitDeliveriesJob implements ShouldQueue
 
     public function handle()
     {
-//        BenefitDelivery::where('status', 'PENDING')
-//            ->where('valid_until', '<', Carbon::now())
-//            ->update(['status' => 'EXPIRED']);
+        BenefitDelivery::where('status', 'PENDING')
+            ->where('valid_until', '<', Carbon::now())
+            ->update(['status' => 'EXPIRED']);
     }
 }
