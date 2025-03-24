@@ -19,15 +19,26 @@
 
     <div>
         <label class="block font-medium text-sm text-gray-700 mb-2">Permissões</label>
-        <div class="grid grid-cols-2 md:grid-cols-3 gap-2">
-            @foreach($permissions as $permission)
-                <label class="inline-flex items-center">
-                    <input type="checkbox" name="permissions[]" value="{{ $permission->id }}" {{ isset($role) && $role->permissions->contains($permission->id) ? 'checked' : '' }} class="rounded border-gray-300 text-blue-600 shadow-sm focus:ring focus:ring-blue-200">
-                    <span class="ml-2 text-sm text-gray-700">{{ $permission->name }}</span>
-                </label>
+        <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
+            @foreach($permissions->groupBy('module') as $module => $grouped)
+                <div class="space-y-2">
+                    <h4 class="text-sm font-semibold text-gray-600">{{ $module ?? 'Sem módulo' }}</h4>
+                    @foreach($grouped as $permission)
+                        <label class="flex items-center space-x-2">
+                            <input
+                                type="checkbox"
+                                name="permissions[]"
+                                value="{{ $permission->id }}"
+                                {{ isset($role) && $role->permissions->contains($permission->id) ? 'checked' : '' }}
+                            >
+                            <span>{{ $permission->name }}</span>
+                        </label>
+                    @endforeach
+                </div>
             @endforeach
         </div>
     </div>
+
 
     <div class="flex justify-between items-center mt-6">
         <a href="{{ route('access-control.roles') }}" class="bg-gray-500 hover:bg-gray-600 text-white px-4 py-2 rounded">Cancelar</a>

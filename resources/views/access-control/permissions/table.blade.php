@@ -2,6 +2,7 @@
     <thead class="bg-gray-50">
     <tr>
         <th class="px-4 py-2 text-left font-medium text-gray-700">Nome</th>
+        <th class="px-4 py-2 text-left font-medium text-gray-700">Módulo</th>
         <th class="px-4 py-2 text-right font-medium text-gray-700">Ações</th>
     </tr>
     </thead>
@@ -9,6 +10,7 @@
     @foreach($permissions as $permission)
         <tr>
             <td class="px-4 py-2">{{ $permission->name }}</td>
+            <td class="px-4 py-2">{{ $permission->module }}</td>
             <td class="px-4 py-2 text-right">
                 <div class="flex justify-end items-center gap-3 relative dropdown-actions">
                     <a href="{{ route('permissions.edit', $permission) }}"

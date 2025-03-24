@@ -4,7 +4,9 @@ namespace App\Http\Controllers;
 
 use App\Models\User;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Hash;
+use Spatie\Permission\Models\Permission;
 use Spatie\Permission\Models\Role;
 
 class UserController extends Controller
@@ -16,10 +18,10 @@ class UserController extends Controller
 
     public function create()
     {
-        $roles = Role::all();
         return view('access-control.users.create', [
             'user' => new User(),
-            'roles' => $roles,
+            'roles' => Role::all(),
+            'permissions' => Permission::all(),
             'action' => route('users.store'),
             'method' => 'POST',
         ]);
@@ -30,9 +32,11 @@ class UserController extends Controller
         $request->validate([
             'name' => 'required|string|max:255',
             'email' => 'required|string|email|max:255|unique:users',
-            'password' => 'required|string|min:8',
+            'password' => 'required|string|min:6',
             'roles' => 'array',
             'roles.*' => 'exists:roles,id',
+            'permissions' => 'array',
+            'permissions.*' => 'exists:permissions,id',
         ]);
 
         $user = User::create([
@@ -43,6 +47,10 @@ class UserController extends Controller
 
         if ($request->filled('roles')) {
             $user->roles()->sync($request->roles);
+        }
+
+        if ($request->filled('permissions')) {
+            $user->permissions()->sync($request->permissions);
         }
 
         if ($request->ajax()) {
@@ -62,10 +70,12 @@ class UserController extends Controller
     {
         $user = User::findOrFail($id);
         $roles = Role::all();
+        $permissions = Permission::all();
 
         return view('access-control.users.edit', [
             'user' => $user,
             'roles' => $roles,
+            'permissions' => $permissions,
             'action' => route('users.update', $user->id),
             'method' => 'PUT',
         ]);
@@ -81,6 +91,8 @@ class UserController extends Controller
             'password' => 'nullable|string|min:8',
             'roles' => 'array',
             'roles.*' => 'exists:roles,id',
+            'permissions' => 'array',
+            'permissions.*' => 'string|exists:permissions,name',
         ]);
 
         $user->name = $request->name;
@@ -92,11 +104,8 @@ class UserController extends Controller
 
         $user->save();
 
-        if ($request->filled('roles')) {
-            $user->roles()->sync($request->roles);
-        } else {
-            $user->roles()->detach();
-        }
+        $user->roles()->sync($request->input('roles', []));
+        $user->syncPermissions($request->input('permissions', []));
 
         if ($request->ajax()) {
             return response()->json(['success' => true, 'message' => 'Usuário atualizado com sucesso!']);

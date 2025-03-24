@@ -11,7 +11,7 @@ class AccessControlController extends Controller
     public function index()
     {
         $roles = Role::where("name", "!=", "SuperAdmin")->get();
-        $permissions = Permission::all();
+        $permissions = Permission::orderBy('module', 'asc')->get();
         $users = User::where('id', '!=', auth()->id())->get();
 
         $route = request()->route()->getName();

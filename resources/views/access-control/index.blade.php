@@ -16,7 +16,7 @@
             </nav>
 
             {{-- Cartão principal --}}
-            <div class="bg-white shadow-md rounded-md p-6">
+            <div class="bg-white md:shadow-md md:rounded-md mf:p-6 px-3 py-6">
                 <h2 class="text-xl font-semibold text-gray-800 mb-6">Controle de Acesso</h2>
 
                 {{-- Mensagens de sucesso --}}
@@ -56,7 +56,7 @@
                         @can('create role')
                             <a href="{{ route('roles.create') }}" class="bg-blue-500 hover:bg-blue-600 text-white px-4 py-2 rounded mb-4 inline-block">Novo Papel</a>
                         @endcan
-                        <div class="overflow-x-auto">
+                        <div class="overflow-x-scroll">
                             @include('access-control.roles.table')
                         </div>
                     </div>
@@ -68,7 +68,7 @@
                         @can('create permission')
                             <a href="{{ route('permissions.create') }}" class="bg-blue-500 hover:bg-blue-600 text-white px-4 py-2 rounded mb-4 inline-block">Nova Permissão</a>
                         @endcan
-                        <div class="overflow-x-auto">
+                        <div class="overflow-x-scroll">
                             @include('access-control.permissions.table')
                         </div>
                     </div>
@@ -80,7 +80,7 @@
                         @can('create user')
                             <a href="{{ route('users.create') }}" class="bg-blue-500 hover:bg-blue-600 text-white px-4 py-2 rounded mb-4 inline-block">Novo Usuário</a>
                         @endcan
-                        <div class="overflow-x-auto">
+                        <div class="overflow-x-scroll">
                             @include('access-control.users.table')
                         </div>
                     </div>

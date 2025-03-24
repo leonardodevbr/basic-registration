@@ -11,10 +11,9 @@
                     <li>Editar Usuário</li>
                 </ol>
             </nav>
-
             <div class="bg-white md:shadow-md md:rounded-md p-6">
                 <h2 class="text-xl font-semibold mb-4">Editar Usuário</h2>
-                @include('access-control.users.form', ['action' => route('users.update', $user->id), 'method' => 'PUT', 'user' => $user])
+                @include('access-control.users.form', ['action' => route('users.update', $user->id), 'method' => 'PUT', 'user' => $user, 'permissions' => $permissions])
             </div>
         </div>
     </div>

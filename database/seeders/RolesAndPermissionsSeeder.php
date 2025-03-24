@@ -16,34 +16,48 @@ class RolesAndPermissionsSeeder extends Seeder
 
         // Permissões principais
         $permissions = [
-            // Entregas de benefícios
-            'view benefit deliveries',
-            'create benefit deliveries',
-            'update benefit deliveries',
-            'delete benefit deliveries',
+            // Módulo: Entregas de Benefícios
+            'Entregas de Benefícios' => [
+                'view benefit deliveries',
+                'create benefit deliveries',
+                'update benefit deliveries',
+                'delete benefit deliveries',
+            ],
 
-            // Usuários
-            'view users',
-            'create users',
-            'update users',
-            'delete users',
+            // Módulo: Usuários
+            'Usuários' => [
+                'view users',
+                'create users',
+                'update users',
+                'delete users',
+            ],
 
-            // Permissões e grupos
-            'manage roles and permissions',
+            // Módulo: Permissões e Grupos
+            'Permissões e Grupos' => [
+                'manage roles and permissions',
+            ],
 
-            // Perfil pessoal
-            'view own profile',
-            'update own profile',
+            // Módulo: Perfil Pessoal
+            'Perfil Pessoal' => [
+                'view own profile',
+                'update own profile',
+            ],
 
-            // Dashboard
-            'view dashboard'
+            // Módulo: Dashboard
+            'Dashboard' => [
+                'view dashboard',
+            ],
         ];
 
-        $unitId = 1;
-
-        foreach ($permissions as $permission) {
-            Permission::firstOrCreate(['name' => $permission]);
+        foreach ($permissions as $module => $actions) {
+            foreach ($actions as $permissionName) {
+                Permission::firstOrCreate(
+                    ['name' => $permissionName],
+                    ['guard_name' => 'web', 'module' => $module]
+                );
+            }
         }
+
         Role::firstOrCreate(['name' => 'SuperAdmin']);
 
         // Role: Colaborador (acesso limitado)
