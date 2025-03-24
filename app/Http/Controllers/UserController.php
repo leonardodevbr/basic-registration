@@ -39,25 +39,32 @@ class UserController extends Controller
             'permissions.*' => 'exists:permissions,id',
         ]);
 
-        $user = User::create([
-            'name' => $request->name,
-            'email' => $request->email,
-            'password' => Hash::make($request->password),
-        ]);
+        try {
+            DB::beginTransaction();
 
-        if ($request->filled('roles')) {
-            $user->roles()->sync($request->roles);
+            $user = User::create([
+                'name' => $request->name,
+                'email' => $request->email,
+                'password' => Hash::make($request->password),
+            ]);
+
+            $user->roles()->sync($request->input('roles', []));
+            $user->permissions()->sync($request->input('permissions', []));
+
+            DB::commit();
+
+            if ($request->ajax()) {
+                return response()->json(['success' => true, 'message' => 'Usuário criado com sucesso!']);
+            }
+
+            return redirect()->route('access-control.users')->with('success', 'Usuário criado com sucesso!');
+        } catch (\Exception $e) {
+            DB::rollBack();
+            if ($request->ajax()) {
+                return response()->json(['success' => false, 'message' => 'Erro ao criar usuário.', 'error' => $e->getMessage()], 500);
+            }
+            return redirect()->back()->withErrors('Erro ao criar usuário: ' . $e->getMessage());
         }
-
-        if ($request->filled('permissions')) {
-            $user->permissions()->sync($request->permissions);
-        }
-
-        if ($request->ajax()) {
-            return response()->json(['success' => true, 'message' => 'Usuário criado com sucesso!']);
-        }
-
-        return redirect()->route('access-control.users')->with('success', 'Usuário criado com sucesso!');
     }
 
     public function show(string $id)
@@ -92,37 +99,59 @@ class UserController extends Controller
             'roles' => 'array',
             'roles.*' => 'exists:roles,id',
             'permissions' => 'array',
-            'permissions.*' => 'string|exists:permissions,name',
+            'permissions.*' => 'exists:permissions,id',
         ]);
 
-        $user->name = $request->name;
-        $user->email = $request->email;
+        try {
+            DB::beginTransaction();
 
-        if ($request->filled('password')) {
-            $user->password = Hash::make($request->password);
+            $user->name = $request->name;
+            $user->email = $request->email;
+
+            if ($request->filled('password')) {
+                $user->password = Hash::make($request->password);
+            }
+
+            $user->save();
+
+            $user->roles()->sync($request->input('roles', []));
+            $user->permissions()->sync($request->input('permissions', []));
+
+            DB::commit();
+
+            if ($request->ajax()) {
+                return response()->json(['success' => true, 'message' => 'Usuário atualizado com sucesso!']);
+            }
+
+            return redirect()->route('access-control.users')->with('success', 'Usuário atualizado com sucesso!');
+        } catch (\Exception $e) {
+            DB::rollBack();
+            if ($request->ajax()) {
+                return response()->json(['success' => false, 'message' => 'Erro ao atualizar usuário.', 'error' => $e->getMessage()], 500);
+            }
+            return redirect()->back()->withErrors('Erro ao atualizar usuário: ' . $e->getMessage());
         }
-
-        $user->save();
-
-        $user->roles()->sync($request->input('roles', []));
-        $user->syncPermissions($request->input('permissions', []));
-
-        if ($request->ajax()) {
-            return response()->json(['success' => true, 'message' => 'Usuário atualizado com sucesso!']);
-        }
-
-        return redirect()->route('access-control.users')->with('success', 'Usuário atualizado com sucesso!');
     }
 
     public function destroy(Request $request, string $id)
     {
-        $user = User::findOrFail($id);
-        $user->delete();
+        try {
+            DB::beginTransaction();
+            $user = User::findOrFail($id);
+            $user->delete();
+            DB::commit();
 
-        if ($request->ajax()) {
-            return response()->json(['success' => true, 'message' => 'Usuário removido com sucesso!']);
+            if ($request->ajax()) {
+                return response()->json(['success' => true, 'message' => 'Usuário removido com sucesso!']);
+            }
+
+            return redirect()->route('access-control.users')->with('success', 'Usuário removido com sucesso!');
+        } catch (\Exception $e) {
+            DB::rollBack();
+            if ($request->ajax()) {
+                return response()->json(['success' => false, 'message' => 'Erro ao remover usuário.', 'error' => $e->getMessage()], 500);
+            }
+            return redirect()->back()->withErrors('Erro ao remover usuário: ' . $e->getMessage());
         }
-
-        return redirect()->route('access-control.users')->with('success', 'Usuário removido com sucesso!');
     }
 }
