@@ -19,6 +19,16 @@ class DatabaseSeeder extends Seeder
             'city' => 'Cafarnaum-BA',
         ]);
 
+        $unit2 = Unit::create([
+            'name' => 'CRAS Mulungo',
+            'city' => 'Mulungo do Morro-BA',
+        ]);
+
+        $unit3 = Unit::create([
+            'name' => 'CRAS Seabra',
+            'city' => 'Seabra',
+        ]);
+
         $this->call([
             RolesAndPermissionsSeeder::class,
         ]);
@@ -38,6 +48,22 @@ class DatabaseSeeder extends Seeder
         ]);
         $admin->assignRole('Admin');
 
+        $admin2 = User::create([
+            'unit_id' => $unit2->id,
+            'name' => 'Admin Teste 2',
+            'email' => 'admin2@admin.com',
+            'password' => bcrypt('senha123'),
+        ]);
+        $admin2->assignRole('Admin');
+
+        $admin3 = User::create([
+            'unit_id' => $unit3->id,
+            'name' => 'Admin Teste 3',
+            'email' => 'admin3@admin.com',
+            'password' => bcrypt('senha123'),
+        ]);
+        $admin3->assignRole('Admin');
+
         $user = User::create([
             'unit_id' => $unit->id,
             'name' => 'Colaborador Teste',
@@ -48,6 +74,18 @@ class DatabaseSeeder extends Seeder
 
         Benefit::create([
             'unit_id' => $unit->id,
+            'name' => 'Peixe Solidário',
+            'description' => 'Entrega de peixes na semana santa',
+        ]);
+
+        Benefit::create([
+            'unit_id' => $unit2->id,
+            'name' => 'Peixe Solidário',
+            'description' => 'Entrega de peixes na semana santa',
+        ]);
+
+        Benefit::create([
+            'unit_id' => $unit3->id,
             'name' => 'Peixe Solidário',
             'description' => 'Entrega de peixes na semana santa',
         ]);

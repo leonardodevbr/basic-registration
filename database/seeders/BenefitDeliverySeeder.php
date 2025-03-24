@@ -20,14 +20,6 @@ class BenefitDeliverySeeder extends Seeder
         $users = User::pluck('id')->toArray();
         $benefits = Benefit::pluck('id')->toArray();
 
-        if (empty($users)) {
-            $users = [User::factory()->create()->id];
-        }
-
-        if (empty($benefits)) {
-            $benefits = [Benefit::factory()->create(['name' => 'Peixe Solidário', 'unit_id' => 1])->id];
-        }
-
         // Lista fixa de selfies
         $selfieFiles = [
             "67d1a0e3e7f91.png", "67d1bd86e7919.png", "67d1c2b817415.png",
@@ -100,7 +92,12 @@ class BenefitDeliverySeeder extends Seeder
                 'registered_by_id' => fake()->randomElement($users),
                 'delivered_by_id'  => $deliveredAt ? fake()->randomElement($users) : null,
                 'delivered_at'     => $deliveredAt,
-                'unit_id'          => 1,
+                'created_at'       =>  Carbon::now()->subDays(rand(0, 30)),
+                'unit_id'          => match (true) {
+                                        $i < 334 => 1,
+                                        $i < 667 => 2,
+                                        default => 3,
+                                    }
             ]);
         }
 
