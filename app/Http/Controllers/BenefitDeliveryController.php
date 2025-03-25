@@ -63,7 +63,12 @@ class BenefitDeliveryController extends Controller
 
     public function create()
     {
-        $benefits = Benefit::all();
+        $benefits = Benefit::when(auth()->user()->can('update unities'), function ($query) {
+            $query->when(!empty(auth()->user()->unit_id), function ($q) {
+                $q->where('unit_id', auth()->user()->unit_id);
+            });
+        })
+            ->get();
         $unities = Unit::all();
         return view('benefit-deliveries.create', compact('benefits', 'unities'));
     }
