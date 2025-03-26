@@ -100,7 +100,7 @@
                     }))) !!},
                     datasets: [{
                         data: {!! json_encode($deliveriesByStatus->values()) !!},
-                        backgroundColor: ['#F59E0B', '#EF4444', '#10B981', '#6366F1']
+                        backgroundColor: ['#F59E0B', '#EF4444', '#6366F1', '#10B981']
                     }]
                 },
                 options: {
