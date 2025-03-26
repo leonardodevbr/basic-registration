@@ -24,7 +24,7 @@
                                class="border rounded px-3 py-1.5 text-sm">
                     </div>
                     <button type="submit"
-                            class="bg-indigo-600 text-white px-4 py-2 rounded hover:bg-indigo-700">Aplicar Filtro</button>
+                            class="bg-indigo-600 text-white px-4 py-2 text-sm rounded hover:bg-indigo-700">Aplicar Filtro</button>
                 </form>
 
                 <!-- Cartões principais -->
@@ -100,7 +100,7 @@
                     }))) !!},
                     datasets: [{
                         data: {!! json_encode($deliveriesByStatus->values()) !!},
-                        backgroundColor: ['#10B981', '#F59E0B', '#EF4444', '#6366F1']
+                        backgroundColor: ['#F59E0B', '#EF4444', '#10B981', '#6366F1']
                     }]
                 },
                 options: {
