@@ -17,7 +17,7 @@ use Illuminate\Database\Eloquent\Relations\BelongsTo;
 
 /**
  * Class BenefitDelivery
- *
+ * 
  * @property int $id
  * @property int $benefit_id
  * @property int $person_id
@@ -30,7 +30,7 @@ use Illuminate\Database\Eloquent\Relations\BelongsTo;
  * @property Carbon|null $delivered_at
  * @property Carbon|null $created_at
  * @property Carbon|null $updated_at
- *
+ * 
  * @property Benefit $benefit
  * @property User|null $user
  * @property Person $person
@@ -68,6 +68,11 @@ class BenefitDelivery extends Model
 	public function benefit(): BelongsTo
 	{
 		return $this->belongsTo(Benefit::class);
+	}
+
+	public function user(): BelongsTo
+	{
+		return $this->belongsTo(User::class, 'registered_by_id');
 	}
 
 	public function person(): BelongsTo

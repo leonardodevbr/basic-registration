@@ -87,7 +87,6 @@ class RolesAndPermissionsSeeder extends Seeder
         // Role: Colaborador (acesso limitado)
         $colaborador = Role::firstOrCreate(['name' => 'Colaborador']);
         $colaborador->syncPermissions([
-            'view dashboard',
             'view benefit deliveries',
             'create benefit deliveries',
             'update benefit deliveries',

@@ -1,3 +1,12 @@
+@php
+    $directPermissions = old('permissions', isset($user) ? $user->permissions->pluck('id')->toArray() : []);
+    $inheritedPermissions = $inheritedPermissions ?? (
+        isset($user)
+            ? $user->roles->flatMap(fn($role) => $role->permissions)->pluck('id')->unique()->toArray()
+            : []
+    );
+@endphp
+
 @if($errors->any())
     <div class="mb-4 p-4 bg-red-100 text-red-700 rounded">
         <ul class="list-disc list-inside">
@@ -11,6 +20,12 @@
 <form action="{{ $action }}" method="POST" class="space-y-6">
     @csrf
     @method($method)
+
+    <div>
+        <label for="registration_number" class="block font-medium text-sm text-gray-700">Matrícula</label>
+        <input type="text" name="registration_number" id="registration_number" class="mt-1 block w-full rounded-md shadow-sm border-gray-300 focus:border-blue-500 focus:ring focus:ring-blue-200" value="{{ old('registration_number', $user->registration_number ?? '') }}" required>
+    </div>
+
 
     <div>
         <label for="name" class="block font-medium text-sm text-gray-700">Nome</label>
@@ -49,17 +64,47 @@
                 <div class="space-y-2">
                     <h4 class="text-sm font-semibold text-gray-600">{{ $module ?? 'Sem módulo' }}</h4>
                     @foreach($grouped as $permission)
-                        <label class="flex items-center space-x-2">
-                            <input
-                                type="checkbox"
-                                name="permissions[]"
-                                value="{{ $permission->id }}"
-                                class="permission-checkbox"
-                                data-permission-id="{{ $permission->id }}"
-                                data-modules="{{ $permission->module }}"
-                                {{ in_array($permission->id, old('permissions', isset($user) ? $user->permissions->pluck('id')->toArray() : [])) ? 'checked' : '' }}>
-                            <span>{{ $permission->name }}</span>
-                        </label>
+                        @php
+                            $isChecked = in_array($permission->id, $directPermissions) || in_array($permission->id, $inheritedPermissions);
+                            $isInherited = !in_array($permission->id, $directPermissions) && in_array($permission->id, $inheritedPermissions);
+                            $isDenied = in_array($permission->name, old('denied_permissions', $user->denied_permissions ?? []));
+                        @endphp
+
+                        <div class="flex items-center space-x-2 group">
+                            <label class="flex items-center space-x-2">
+                                <input
+                                    type="checkbox"
+                                    name="permissions[]"
+                                    value="{{ $permission->id }}"
+                                    class="permission-checkbox"
+                                    data-permission-id="{{ $permission->id }}"
+                                    data-modules="{{ $permission->module }}"
+                                    {{ $isChecked ? 'checked' : '' }}
+                                >
+                                <span>
+            {{ $permission->name }}
+                                    @if($isInherited)
+                                        <span class="text-xs italic text-gray-400">(herdada)</span>
+                                    @endif
+        </span>
+                            </label>
+
+                            @if($isInherited)
+                                <button
+                                    type="button"
+                                    class="ml-1 text-xs text-red-500 hover:text-red-700 toggle-block"
+                                    data-id="{{ $permission->id }}"
+                                    title="Bloquear esta permissão herdada"
+                                >
+                                    @if($isDenied)
+                                        <i class="fas fa-ban"></i> bloqueada
+                                    @else
+                                        <i class="far fa-circle"></i> bloquear
+                                    @endif
+                                </button>
+                                <input type="hidden" name="denied_permissions[]" value="{{ $permission->name }}" class="hidden-block" data-id="{{ $permission->id }}" {{ $isDenied ? '' : 'disabled' }}>
+                            @endif
+                        </div>
                     @endforeach
                 </div>
             @endforeach
@@ -89,6 +134,23 @@
                         checkbox.checked = this.checked;
                     }
                 });
+            });
+        });
+
+        document.querySelectorAll('.toggle-block').forEach(button => {
+            button.addEventListener('click', function () {
+                const id = this.getAttribute('data-id');
+                const input = document.querySelector(`input.hidden-block[data-id="${id}"]`);
+
+                const isBlocked = !input.disabled;
+                input.disabled = isBlocked;
+
+                // Atualiza o ícone/texto visual
+                if (isBlocked) {
+                    this.innerHTML = '<i class="far fa-circle"></i> bloquear';
+                } else {
+                    this.innerHTML = '<i class="fas fa-ban"></i> bloqueada'
+                }
             });
         });
     });

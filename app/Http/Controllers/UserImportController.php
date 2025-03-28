@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers;
 
+use App\Models\Person;
 use App\Models\User;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Hash;
@@ -19,29 +20,44 @@ class UserImportController extends Controller
         $request->validate(['file' => 'required|file|mimes:xlsx']);
 
         $file = $request->file('file');
-        $rows = Excel::toArray([], $file)[0];
+        $rows = Excel::toArray((object)[], $file)[0];
 
         unset($rows[0]); // remove cabeçalho
 
         foreach ($rows as $row) {
-            $name = $row[0] ?? null;
-            $cpf = preg_replace('/\D/', '', $row[1] ?? '');
-            $email = $row[2] ?? null;
+            $registrationNumber = $row[0] ?? null;
+            $name = $row[1] ?? null;
+            $cpf = preg_replace('/\D/', '', $row[2] ?? '');
+            $email = $row[3] ?? null;
 
-            if (!$name || !$cpf || !$email) continue;
+            if (!$registrationNumber || !$name || !$cpf || !$email) continue;
 
-            $existing = User::where('email', $email)->orWhere('cpf', $cpf)->first();
+            // 🔹 Cria o usuário apenas se não existir
+            $existing = User::where('email', $email)->first();
             if ($existing) continue;
 
             $user = new User();
             $user->name = $name;
-            $user->cpf = $cpf;
             $user->email = $email;
-            $user->registration_number = 'MATR' . rand(1000, 9999);
+            $user->registration_number = $registrationNumber;
             $user->password = Hash::make(substr($cpf, 0, 6));
             $user->save();
 
-            $user->assignRole('Funcionario');
+            $user->assignRole('Colaborador');
+
+            // 🔹 Atualiza ou cria a pessoa
+            $person = Person::where('cpf', $cpf)->first();
+            if ($person) {
+                $person->update([
+                    'name' => $name,
+                ]);
+            } else {
+                $person = Person::create([
+                    'user_id' => $user->id,
+                    'name' => $name,
+                    'cpf' => $cpf,
+                ]);
+            }
         }
 
         return back()->with('success', 'Importação concluída com sucesso!');

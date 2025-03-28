@@ -30,6 +30,7 @@ class UserController extends Controller
     public function store(Request $request)
     {
         $request->validate([
+            'registration_number' => 'string|max:255',
             'name' => 'required|string|max:255',
             'email' => 'required|string|email|max:255|unique:users',
             'password' => 'required|string|min:6',
@@ -42,14 +43,27 @@ class UserController extends Controller
         try {
             DB::beginTransaction();
 
+            $deniedIds = $request->input('denied_permissions', []);
+            $deniedNames = Permission::whereIn('id', $deniedIds)->pluck('name')->toArray();
+
             $user = User::create([
+                'registration_number' => $request->registration_number ?? "",
                 'name' => $request->name,
                 'email' => $request->email,
                 'password' => Hash::make($request->password),
+                'denied_permissions' => $deniedNames
             ]);
 
-            $user->roles()->sync($request->input('roles', []));
-            $user->permissions()->sync($request->input('permissions', []));
+            $rolesPermissions = collect(Role::find($request->input('roles', [])))
+                ->flatMap(fn($role) => $role->permissions)
+                ->pluck('id')
+                ->unique()
+                ->toArray();
+
+            $selectedPermissions = $request->input('permissions', []);
+            $directPermissions = array_diff($selectedPermissions, $rolesPermissions);
+
+            $user->permissions()->sync($directPermissions);
 
             DB::commit();
 
@@ -79,10 +93,17 @@ class UserController extends Controller
         $roles = Role::all();
         $permissions = Permission::all();
 
+        $inheritedPermissions = $user->roles
+            ->flatMap(fn($role) => $role->permissions)
+            ->pluck('id')
+            ->unique()
+            ->toArray();
+
         return view('access-control.users.edit', [
             'user' => $user,
             'roles' => $roles,
             'permissions' => $permissions,
+            'inheritedPermissions' => $inheritedPermissions,
             'action' => route('users.update', $user->id),
             'method' => 'PUT',
         ]);
@@ -93,6 +114,7 @@ class UserController extends Controller
         $user = User::findOrFail($id);
 
         $request->validate([
+            'registration_number' => 'string|max:255',
             'name' => 'required|string|max:255',
             'email' => 'required|string|email|max:255|unique:users,email,' . $user->id,
             'password' => 'nullable|string|min:8',
@@ -100,13 +122,19 @@ class UserController extends Controller
             'roles.*' => 'exists:roles,id',
             'permissions' => 'array',
             'permissions.*' => 'exists:permissions,id',
+            'denied_permissions' => 'array',
         ]);
 
         try {
             DB::beginTransaction();
 
+            $deniedIds = $request->input('denied_permissions', []);
+            $deniedNames = Permission::whereIn('id', $deniedIds)->pluck('name')->toArray();
+
+            $user->registration_number = $request->registration_number ?? $user->registration_number;
             $user->name = $request->name;
             $user->email = $request->email;
+            $user->denied_permissions = $deniedNames;
 
             if ($request->filled('password')) {
                 $user->password = Hash::make($request->password);
@@ -114,8 +142,22 @@ class UserController extends Controller
 
             $user->save();
 
+            // ✅ Sincroniza roles normalmente
             $user->roles()->sync($request->input('roles', []));
-            $user->permissions()->sync($request->input('permissions', []));
+
+            // 🧠 Agora só sincroniza as permissões diretas, sem incluir as herdadas
+            $rolesPermissions = $user->roles
+                ->flatMap(fn($role) => $role->permissions)
+                ->pluck('id')
+                ->unique()
+                ->toArray();
+
+            $selectedPermissions = $request->input('permissions', []);
+
+            // 🔍 Remove as herdadas do array antes de sincronizar
+            $directPermissions = array_diff($selectedPermissions, $rolesPermissions);
+
+            $user->permissions()->sync($directPermissions);
 
             DB::commit();
 

@@ -1,7 +1,9 @@
 <table class="min-w-full divide-y divide-gray-200 text-sm">
     <thead class="bg-gray-50">
     <tr>
+        <th class="px-4 py-2 text-left font-medium text-gray-700">Matrícula</th>
         <th class="px-4 py-2 text-left font-medium text-gray-700">Nome</th>
+        <th class="px-4 py-2 text-left font-medium text-gray-700">CPF</th>
         <th class="px-4 py-2 text-left font-medium text-gray-700">Email</th>
         <th class="px-4 py-2 text-left font-medium text-gray-700">Papéis</th>
         <th class="px-4 py-2 text-right font-medium text-gray-700">Ações</th>
@@ -10,7 +12,9 @@
     <tbody class="bg-white divide-y divide-gray-100">
     @foreach($users as $user)
         <tr>
+            <td class="px-4 py-2">{{ $user->registration_number ?? "#"}}</td>
             <td class="px-4 py-2">{{ $user->name }}</td>
+            <td class="px-4 py-2">{{ !empty($user->person->cpf) ? preg_replace("/(\d{3})(\d{3})(\d{3})(\d{2})/", "$1.$2.$3-$4", $user->person->cpf) : "-" }}</td>
             <td class="px-4 py-2">{{ $user->email }}</td>
             <td class="px-4 py-2">
                 @foreach($user->roles as $role)

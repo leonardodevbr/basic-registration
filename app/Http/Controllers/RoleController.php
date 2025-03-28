@@ -33,7 +33,8 @@ class RoleController extends Controller
         ]);
 
         $role = Role::create(['name' => $request->name]);
-        $role->syncPermissions($request->permissions);
+        $permissionNames = Permission::whereIn('id', $request->permissions)->pluck('name')->toArray();
+        $role->syncPermissions($permissionNames);
 
         if ($request->ajax()) {
             return response()->json(['success' => true, 'message' => 'Papel criado com sucesso!']);
@@ -62,7 +63,8 @@ class RoleController extends Controller
         ]);
 
         $role->update(['name' => $request->name]);
-        $role->syncPermissions($request->permissions);
+        $permissionNames = Permission::whereIn('id', $request->permissions)->pluck('name')->toArray();
+        $role->syncPermissions($permissionNames);
 
         if ($request->ajax()) {
             return response()->json(['success' => true, 'message' => 'Papel atualizado com sucesso!']);
