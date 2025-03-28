@@ -17,6 +17,17 @@ return new class extends Migration
             $table->string('name');
             $table->string('cpf', 14)->unique();
             $table->string('phone')->nullable();
+            $table->string('mother_name')->nullable();
+            $table->string('father_name')->nullable();
+            $table->date('birth_date')->nullable();
+            $table->string('gender')->nullable();
+            $table->string('nis')->nullable();
+            $table->string('rg')->nullable();
+            $table->string('issuing_agency')->nullable();
+            $table->string('marital_status')->nullable();
+            $table->string('race_color')->nullable();
+            $table->string('nationality')->nullable();
+            $table->string('naturalness')->nullable();
             $table->string('selfie_path')->nullable();
             $table->string('thumb_path')->nullable();
             $table->timestamps();

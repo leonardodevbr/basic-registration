@@ -76,20 +76,33 @@ class BenefitDeliveryController extends Controller
     public function store(BenefitDeliveryStoreRequest $request)
     {
         $inputData = $request->all();
+
         // 🔹 1️⃣ Verifica se a pessoa já existe pelo CPF
         $person = Person::where('cpf', $inputData['person']['cpf'])->first();
 
-        if ($person) {
-            // Atualiza os dados da pessoa existente
-            $person->update([
-                'name' => $inputData['person']['name'],
-                'phone' => $inputData['person']['phone'] ?? $person->phone,
-            ]);
+        $personData = [
+            'name' => $inputData['person']['name'],
+            'phone' => $inputData['person']['phone'] ?? null,
+            'mother_name' => $inputData['person']['mother_name'] ?? null,
+            'father_name' => $inputData['person']['father_name'] ?? null,
+            'birth_date' => $inputData['person']['birth_date'] ?? null,
+            'gender' => $inputData['person']['gender'] ?? null,
+            'nis' => $inputData['person']['nis'] ?? null,
+            'rg' => $inputData['person']['rg'] ?? null,
+            'issuing_agency' => $inputData['person']['issuing_agency'] ?? null,
+            'marital_status' => $inputData['person']['marital_status'] ?? null,
+            'race_color' => $inputData['person']['race_color'] ?? null,
+            'nationality' => $inputData['person']['nationality'] ?? null,
+            'naturalness' => $inputData['person']['naturalness'] ?? null,
+        ];
 
-            // 🔹 2️⃣ Impede cadastrar o mesmo benefício para a mesma pessoa se estiver PENDENTE ou ENTREGUE
+        if ($person) {
+            $person->update($personData);
+
+            // 🔹 2️⃣ Impede duplicidade de benefício
             $existingBenefit = BenefitDelivery::where('person_id', $person->id)
-                ->where('benefit_id', $inputData['benefit_id']) // ✅ Apenas para o mesmo benefício
-                ->whereIn('status', ['PENDING', 'DELIVERED']) // ✅ Apenas se estiver pendente ou entregue
+                ->where('benefit_id', $inputData['benefit_id'])
+                ->whereIn('status', ['PENDING', 'DELIVERED'])
                 ->exists();
 
             if ($existingBenefit) {
@@ -100,34 +113,43 @@ class BenefitDeliveryController extends Controller
             }
 
         } else {
-            // 🔹 Criar uma nova pessoa caso não exista
-            $person = Person::create([
-                'name' => $inputData['person']['name'],
-                'cpf' => $inputData['person']['cpf'],
-                'phone' => $inputData['person']['phone'] ?? null,
-            ]);
+            $person = Person::create(array_merge(
+                ['cpf' => $inputData['person']['cpf']],
+                $personData
+            ));
         }
 
-        // 🔹 Se veio selfie nova, salva a imagem temporariamente e envia para processamento
+        // 🔹 3️⃣ Endereços (1:N) — se vierem
+        if (!empty($inputData['person']['addresses']) && is_array($inputData['person']['addresses'])) {
+            foreach ($inputData['person']['addresses'] as $address) {
+                $person->addresses()->create([
+                    'zipcode' => $address['zipcode'] ?? null,
+                    'street' => $address['street'] ?? null,
+                    'number' => $address['number'] ?? null,
+                    'complement' => $address['complement'] ?? null,
+                    'neighborhood' => $address['neighborhood'] ?? null,
+                    'city' => $address['city'] ?? null,
+                    'state' => $address['state'] ?? null,
+                    'latitude' => $address['latitude'] ?? null,
+                    'longitude' => $address['longitude'] ?? null,
+                    'type' => $address['type'] ?? null,
+                    'reference' => $address['reference'] ?? null,
+                ]);
+            }
+        }
+
+        // 🔹 4️⃣ Se veio selfie, processa
         if (!empty($inputData['person']['selfie'])) {
-            // Remove o prefixo do Base64
             $base64Image = str_replace('data:image/png;base64,', '', $inputData['person']['selfie']);
-
-            // Gerar um identificador único para a imagem
             $cacheKey = 'selfie_' . uniqid('selfie_', true);
-
-            // Armazena a imagem no cache (expira em 10 minutos para evitar acúmulo)
             Cache::put($cacheKey, $base64Image, now()->addMinutes(10));
-
-            // Chama o job passando apenas a chave do cache
             ProcessSelfieImage::dispatchAfterResponse($cacheKey, $person->id);
         }
 
-        // 🔹 Gerar código do ticket e definir validade
+        // 🔹 5️⃣ Criar código do ticket
         $ticketCode = random_int(100000, 999999);
         $validUntil = now()->addWeek();
 
-        // 🔹 Criar a entrega do benefício
         $benefitDelivery = BenefitDelivery::create([
             'benefit_id' => $inputData['benefit_id'],
             'person_id' => $person->id,
@@ -150,6 +172,7 @@ class BenefitDeliveryController extends Controller
         ]);
     }
 
+
     public function edit(BenefitDelivery $benefitDelivery)
     {
         $benefits = Benefit::when(auth()->user()->can('update unities'), function ($query) {
@@ -167,7 +190,7 @@ class BenefitDeliveryController extends Controller
         $inputData = $request->all();
         $person = $benefitDelivery->person;
 
-        // 🔹 1️⃣ Impedir atualização se já existir esse benefício para essa pessoa com status PENDENTE ou ENTREGUE
+        // 🔹 1️⃣ Impedir duplicidade de benefício
         $existingBenefit = BenefitDelivery::where('person_id', $person->id)
             ->where('benefit_id', $inputData['benefit_id'])
             ->whereIn('status', ['PENDING', 'DELIVERED'])
@@ -181,31 +204,37 @@ class BenefitDeliveryController extends Controller
             ], 422);
         }
 
-        // 🔹 2️⃣ Atualizar os dados da pessoa (exceto CPF)
-
-
-        $person->update([
+        // 🔹 2️⃣ Atualizar dados da pessoa (exceto CPF)
+        $personData = [
             'name' => $inputData['person']['name'],
             'phone' => $inputData['person']['phone'] ?? $person->phone,
-        ]);
+            'mother_name' => $inputData['person']['mother_name'] ?? null,
+            'father_name' => $inputData['person']['father_name'] ?? null,
+            'birth_date' => $inputData['person']['birth_date'] ?? null,
+            'gender' => $inputData['person']['gender'] ?? null,
+            'nis' => $inputData['person']['nis'] ?? null,
+            'rg' => $inputData['person']['rg'] ?? null,
+            'issuing_agency' => $inputData['person']['issuing_agency'] ?? null,
+            'marital_status' => $inputData['person']['marital_status'] ?? null,
+            'race_color' => $inputData['person']['race_color'] ?? null,
+            'nationality' => $inputData['person']['nationality'] ?? null,
+            'naturalness' => $inputData['person']['naturalness'] ?? null,
+        ];
 
-        // 🔹 3️⃣ Processar selfie nova apenas se foi enviada
+        $person->update($personData);
+
+        // 🔹 3️⃣ Atualiza selfie se enviada
         if (!empty($inputData['person']['selfie'])) {
-            // Remove o prefixo do Base64
             $base64Image = str_replace('data:image/png;base64,', '', $inputData['person']['selfie']);
-
-            // Gerar um identificador único para a imagem
             $cacheKey = 'selfie_' . uniqid('selfie_', true);
 
-            // 🔥 Salvar a imagem no cache com expiração de 10 minutos
             Cache::put($cacheKey, $base64Image, now()->addMinutes(10));
 
-            // 🔹 Chama o job, enviando também as imagens antigas para remoção
             ProcessSelfieImage::dispatchAfterResponse(
                 $cacheKey,
                 $person->id,
-                $person->selfie_path, // Selfie antiga
-                $person->thumb_path   // Thumbnail antiga
+                $person->selfie_path,
+                $person->thumb_path
             );
 
             $person->update([
@@ -214,13 +243,36 @@ class BenefitDeliveryController extends Controller
             ]);
         }
 
-        // 🔹 4️⃣ Atualizar a entrega do benefício
+        // 🔹 4️⃣ Atualizar endereços se enviados
+        if (!empty($inputData['person']['addresses']) && is_array($inputData['person']['addresses'])) {
+            $person->addresses()->delete(); // Remove todos os antigos
+
+            foreach ($inputData['person']['addresses'] as $address) {
+                $person->addresses()->create([
+                    'zipcode' => $address['zipcode'] ?? null,
+                    'street' => $address['street'] ?? null,
+                    'number' => $address['number'] ?? null,
+                    'complement' => $address['complement'] ?? null,
+                    'neighborhood' => $address['neighborhood'] ?? null,
+                    'city' => $address['city'] ?? null,
+                    'state' => $address['state'] ?? null,
+                    'latitude' => $address['latitude'] ?? null,
+                    'longitude' => $address['longitude'] ?? null,
+                    'type' => $address['type'] ?? null,
+                    'reference' => $address['reference'] ?? null,
+                ]);
+            }
+        }
+
+        // 🔹 5️⃣ Atualizar a entrega
         $dataToUpdate = [
             'benefit_id' => $inputData['benefit_id']
         ];
-        if(!empty($inputData['unit_id']) && auth()->user()->can('update unities')){
+
+        if (!empty($inputData['unit_id']) && auth()->user()->can('update unities')) {
             $dataToUpdate['unit_id'] = $inputData['unit_id'];
         }
+
         $benefitDelivery->update($dataToUpdate);
 
         return response()->json([

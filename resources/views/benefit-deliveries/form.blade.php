@@ -67,10 +67,80 @@
             </div>
 
             <div class="mb-4">
+                <label class="block">NIS:</label>
+                <input type="text" name="person[nis]" class="border rounded w-full p-2"
+                       value="{{ old('person.nis', $benefitDelivery->person->nis ?? '') }}">
+            </div>
+
+            <div class="mb-4">
                 <label class="block">Telefone:</label>
                 <input type="text" name="person[phone]" class="border rounded w-full p-2"
                        value="{{ old('person.phone', $benefitDelivery->person->phone ?? '') }}">
             </div>
+
+            <div class="mb-4">
+                <label class="block">Nome da Mãe:</label>
+                <input type="text" name="person[mother_name]" class="border rounded w-full p-2"
+                       value="{{ old('person.mother_name', $benefitDelivery->person->mother_name ?? '') }}">
+            </div>
+
+            <div class="mb-4">
+                <label class="block">Nome do Pai:</label>
+                <input type="text" name="person[father_name]" class="border rounded w-full p-2"
+                       value="{{ old('person.father_name', $benefitDelivery->person->father_name ?? '') }}">
+            </div>
+
+            <div class="mb-4">
+                <label class="block">Data de Nascimento:</label>
+                <input type="date" name="person[birth_date]" class="border rounded w-full p-2"
+                       value="{{ old('person.birth_date', $benefitDelivery->person->birth_date ?? '') }}">
+            </div>
+
+            <div class="mb-4">
+                <label class="block">Sexo:</label>
+                <select name="person[gender]" class="border rounded w-full p-2">
+                    <option value="">Selecione</option>
+                    <option value="M" {{ old('person.gender', $benefitDelivery->person->gender ?? '') == 'M' ? 'selected' : '' }}>Masculino</option>
+                    <option value="F" {{ old('person.gender', $benefitDelivery->person->gender ?? '') == 'F' ? 'selected' : '' }}>Feminino</option>
+                </select>
+            </div>
+
+            <div class="mb-4">
+                <label class="block">RG:</label>
+                <input type="text" name="person[rg]" class="border rounded w-full p-2"
+                       value="{{ old('person.rg', $benefitDelivery->person->rg ?? '') }}">
+            </div>
+
+            <div class="mb-4">
+                <label class="block">Orgão Emissor:</label>
+                <input type="text" name="person[issuing_agency]" class="border rounded w-full p-2"
+                       value="{{ old('person.issuing_agency', $benefitDelivery->person->issuing_agency ?? '') }}">
+            </div>
+
+            <div class="mb-4">
+                <label class="block">Raça/Cor:</label>
+                <select name="person[race_color]" class="border rounded w-full p-2">
+                    <option value="">Selecione</option>
+                    <option value="1" {{ old('person.race_color', $benefitDelivery->person->race_color ?? '') == '1' ? 'selected' : '' }}>Branca</option>
+                    <option value="2" {{ old('person.race_color', $benefitDelivery->person->race_color ?? '') == '2' ? 'selected' : '' }}>Preta</option>
+                    <option value="3" {{ old('person.race_color', $benefitDelivery->person->race_color ?? '') == '3' ? 'selected' : '' }}>Amarela</option>
+                    <option value="4" {{ old('person.race_color', $benefitDelivery->person->race_color ?? '') == '4' ? 'selected' : '' }}>Parda</option>
+                    <option value="5" {{ old('person.race_color', $benefitDelivery->person->race_color ?? '') == '5' ? 'selected' : '' }}>Indígena</option>
+                </select>
+            </div>
+
+            <div class="mb-4">
+                <label class="block">Nacionalidade:</label>
+                <input type="text" name="person[nationality]" class="border rounded w-full p-2"
+                       value="{{ old('person.nationality', $benefitDelivery->person->nationality ?? 'Brasileira') }}">
+            </div>
+
+            <div class="mb-4">
+                <label class="block">Naturalidade:</label>
+                <input type="text" name="person[naturalness]" class="border rounded w-full p-2"
+                       value="{{ old('person.naturalness', $benefitDelivery->person->naturalness ?? '') }}">
+            </div>
+
 
             <div class="mb-4">
                 <label class="block">Benefício:</label>
@@ -95,6 +165,55 @@
                     </select>
                 </div>
             @endcan
+
+            <div class="mb-4">
+                <label class="block">CEP:</label>
+                <input type="text" name="person[address][cep]" class="border rounded w-full p-2"
+                       value="{{ old('person.address.cep', '') }}">
+            </div>
+
+            <div class="mb-4">
+                <label class="block">Rua:</label>
+                <input type="text" name="person[address][street]" class="border rounded w-full p-2"
+                       value="{{ old('person.address.street', '') }}">
+            </div>
+
+            <div class="mb-4">
+                <label class="block">Número:</label>
+                <input type="text" name="person[address][number]" class="border rounded w-full p-2"
+                       value="{{ old('person.address.number', '') }}">
+            </div>
+
+            <div class="mb-4">
+                <label class="block">Complemento:</label>
+                <input type="text" name="person[address][complement]" class="border rounded w-full p-2"
+                       value="{{ old('person.address.complement', '') }}">
+            </div>
+
+            <div class="mb-4">
+                <label class="block">Bairro:</label>
+                <input type="text" name="person[address][neighborhood]" class="border rounded w-full p-2"
+                       value="{{ old('person.address.neighborhood', '') }}">
+            </div>
+
+            <div class="mb-4">
+                <label class="block">Referência:</label>
+                <input type="text" name="person[address][reference]" class="border rounded w-full p-2"
+                       value="{{ old('person.address.reference', '') }}">
+            </div>
+
+            <div class="mb-4">
+                <label class="block">Cidade:</label>
+                <input type="text" name="person[address][city]" class="border rounded w-full p-2"
+                       value="{{ old('person.address.city', '') }}">
+            </div>
+
+            <div class="mb-4">
+                <label class="block">Estado (UF):</label>
+                <input type="text" name="person[address][state]" class="border rounded w-full p-2"
+                       value="{{ old('person.address.state', '') }}">
+            </div>
+
 
             <!-- (Opcional) Campo unit_id se necessário -->
             <button type="submit" id="save-btn" class="w-full px-4 py-2 bg-indigo-500 text-white rounded">Salvar</button>
@@ -211,43 +330,50 @@
                 });
             }
 
-            async function buscarPessoa(filtro, summarize = false) {
+            async function buscarPessoa(filtro) {
                 loadingOverlay.classList.remove("hidden");
-                let fullUrl = `/api/buscar-pessoa?filtro=${encodeURIComponent(filtro)}`;
-                fetch(fullUrl)
-                    .then(response => {
-                        if (!response.ok) throw new Error("Nenhuma pessoa encontrada");
-                        return response.json();
-                    })
-                    .then(data => {
-                        loadingOverlay.classList.add("hidden");
 
-                        if (data.length === 1) {
-                            preencherFormulario(data[0]);
-                            searchModal.classList.add("hidden");
-                        } else if (data.length > 1) {
-                            exibirResultados(data);
-                        } else {
-                            throw new Error("Nenhuma pessoa encontrada");
-                        }
-                    })
-                    .catch(error => {
-                        loadingOverlay.classList.add("hidden");
-                        console.error("Erro ao buscar pessoa:", error);
+                try {
+                    const fullUrl = `/api/buscar-pessoa?filtro=${encodeURIComponent(filtro)}`;
+                    const response = await fetch(fullUrl);
 
-                        Swal.fire({
-                            title: 'Atenção!',
-                            text: "Nenhum registro encontrado para essa pesquisa. Solicite os dados para o cadastro.",
-                            icon: 'info',
-                            allowOutsideClick: false, // 🔒 Impede clique fora
-                            allowEscapeKey: false,    // 🔒 Impede ESC fechar
-                            confirmButtonColor: '#3085d6',
-                            confirmButtonText: 'Ok'
-                        }).then(() => {
-                            cpfInput.focus();
-                            searchModal.classList.add("hidden");
-                        });
+                    if (!response.ok) throw new Error("Nenhuma pessoa encontrada");
+
+                    const responseData = await response.json();
+                    const data = responseData.original ?? [];
+                    loadingOverlay.classList.add("hidden");
+
+                    if (data.length === 1) {
+                        const personData = data[0].person;
+                        const addressData = data[0].address;
+
+                        preencherFormulario(personData); // 👈 já existe
+                        preencherEndereco(addressData);  // 👈 vamos criar se quiser
+
+                        searchModal.classList.add("hidden");
+                    } else if (data.length > 1) {
+                        exibirResultados(data);
+                    } else {
+                        throw new Error("Nenhuma pessoa encontrada");
+                    }
+
+                } catch (error) {
+                    loadingOverlay.classList.add("hidden");
+                    console.error("Erro ao buscar pessoa:", error);
+
+                    Swal.fire({
+                        title: 'Atenção!',
+                        text: "Nenhum registro encontrado para essa pesquisa. Solicite os dados para o cadastro.",
+                        icon: 'info',
+                        allowOutsideClick: false,
+                        allowEscapeKey: false,
+                        confirmButtonColor: '#3085d6',
+                        confirmButtonText: 'Ok'
+                    }).then(() => {
+                        cpfInput.focus();
+                        searchModal.classList.add("hidden");
                     });
+                }
             }
 
             function exibirResultados(pessoas) {
@@ -266,11 +392,11 @@
                         let row = document.createElement("tr");
                         row.innerHTML = `
                 <td class="border border-gray-300 p-2">
-                    <span class="font-semibold">${pessoa.nom_pessoa}</span><br>
-                    <span class="text-sm text-gray-500">${formatCPF(pessoa.num_cpf_pessoa) || 'Sem CPF'}</span>
+                    <span class="font-semibold">${pessoa.person.name}</span><br>
+                    <span class="text-sm text-gray-500">${formatCPF(pessoa.person.cpf) || 'Sem CPF'}</span>
                 </td>
                 <td class="border border-gray-300 p-2 text-center">
-                    <button class="select-btn bg-[cadetblue] text-white px-2 py-1 text-xs rounded" data-id="${pessoa.num_cpf_pessoa || pessoa.num_nis_pessoa_atual}">
+                    <button class="select-btn bg-[cadetblue] text-white px-2 py-1 text-xs rounded" data-id="${pessoa.person.cpf || pessoa.person.nis}">
                         Selecionar
                     </button>
                 </td>
@@ -282,8 +408,9 @@
                     document.querySelectorAll(".select-btn").forEach(button => {
                         button.addEventListener("click", function () {
                             const dataId = this.getAttribute("data-id");
-                            const pessoaSelecionada = pessoas.find(p => (p.num_cpf_pessoa === dataId || p.num_nis_pessoa_atual === dataId));
-                            preencherFormulario(pessoaSelecionada);
+                            const pessoaSelecionada = pessoas.find(p => (p.person.cpf === dataId || p.person.nis === dataId));
+                            preencherFormulario(pessoaSelecionada.person);
+                            preencherEndereco(pessoaSelecionada.address);
                             searchModal.classList.add("hidden");
                         });
                     });
@@ -330,9 +457,33 @@
             }
 
             function preencherFormulario(pessoa) {
-                cpfInput.value = formatCPF(pessoa.num_cpf_pessoa) || "";
-                nomeInput.value = pessoa.nom_pessoa || "";
-                telefoneInput.value = formatPhone(pessoa.familia?.num_ddd_contato_1_fam+pessoa.familia?.num_tel_contato_1_fam) || "";
+                cpfInput.value = formatCPF(pessoa.cpf) || "";
+                nomeInput.value = pessoa.name || "";
+
+                const telefone = pessoa.phone || "";
+                telefoneInput.value = formatPhone(telefone);
+
+                document.querySelector('input[name="person[mother_name]"]').value = pessoa.mother_name || "";
+                document.querySelector('input[name="person[father_name]"]').value = pessoa.father_name || "";
+                document.querySelector('input[name="person[birth_date]"]').value = pessoa.birth_date || "";
+                document.querySelector('select[name="person[gender]"]').value = pessoa.gender || "";
+                document.querySelector('input[name="person[nis]"]').value = pessoa.nis || "";
+                document.querySelector('input[name="person[rg]"]').value = pessoa.rg || "";
+                document.querySelector('input[name="person[issuing_agency]"]').value = pessoa.issuing_agency || "";
+                document.querySelector('select[name="person[race_color]"]').value = pessoa.race_color || "";
+                document.querySelector('input[name="person[nationality]"]').value = pessoa.nationality || "";
+                document.querySelector('input[name="person[naturalness]"]').value = pessoa.naturalness || "";
+            }
+
+            function preencherEndereco(address = {}) {
+                document.querySelector("input[name='person[address][cep]']").value = address.cep || '';
+                document.querySelector("input[name='person[address][street]']").value = address.street || '';
+                document.querySelector("input[name='person[address][number]']").value = address.number || '';
+                document.querySelector("input[name='person[address][complement]']").value = address.complement || '';
+                document.querySelector("input[name='person[address][neighborhood]']").value = address.neighborhood || '';
+                document.querySelector("input[name='person[address][reference]']").value = address.reference || '';
+                document.querySelector("input[name='person[address][city]']").value = address.city || '';
+                document.querySelector("input[name='person[address][state]']").value = address.state || '';
             }
 
             // Formatar CPF
