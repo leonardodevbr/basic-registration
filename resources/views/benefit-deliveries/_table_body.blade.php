@@ -1,6 +1,6 @@
 {{--resources/views/benefit-deliveries/_table_body.blade.php--}}
 @foreach($deliveries as $benefitDelivery)
-    <tr class="border-b hover:bg-gray-50" data-code="{{ $benefitDelivery->ticket_code }}">
+    <tr class="border-b hover:bg-gray-50" data-code="{{ $benefitDelivery->ticket_code }}"  data-person-id="{{ $benefitDelivery->person->id }}">
         <td class="py-4 pr-2 md:px-6 whitespace-nowrap cursor-pointer">
             <div class="flex min-w-max items-center space-x-4 relative" onclick="openModal('{{ $benefitDelivery->id }}')">
                 <div class="relative">

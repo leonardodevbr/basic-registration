@@ -2,6 +2,7 @@
 
 namespace App\Jobs;
 
+use App\Events\SelfieUpdated;
 use App\Models\Person;
 use Illuminate\Bus\Queueable;
 use Illuminate\Contracts\Queue\ShouldQueue;
@@ -102,6 +103,7 @@ class ProcessSelfieImage implements ShouldQueue
 
                 Log::info("✅ Selfie processada com sucesso para a pessoa ID: {$this->personId}");
             }
+            event(new SelfieUpdated($person->id, $person->thumb_url));
         } catch (\Exception $e) {
             Log::error("❌ Erro ao atualizar caminhos no banco: " . $e->getMessage());
         }

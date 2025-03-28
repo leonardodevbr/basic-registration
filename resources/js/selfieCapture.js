@@ -132,7 +132,7 @@ document.addEventListener("DOMContentLoaded", async () => {
         requestAnimationFrame(drawFaceGuide);
     }
 
-    function startCamera() {
+    async function startCamera() {
         videoElement.style.display = "block";
         canvasElement.style.display = "block";
 
@@ -141,16 +141,20 @@ document.addEventListener("DOMContentLoaded", async () => {
             camera.stop();
         }
 
+        // Garante que só tente iniciar depois que o elemento estiver visível e renderizado
+        await new Promise((resolve) => setTimeout(resolve, 100));
+
         camera = new Camera(videoElement, {
             onFrame: async () => {
                 if (faceMesh) {
                     await faceMesh.send({ image: videoElement });
                 }
             },
-            width: 500,
-            height: 500,
+            width: 640,
+            height: 640,
             facingMode: currentFacingMode,
         });
+
         camera.start();
         drawFaceGuide();
     }

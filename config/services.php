@@ -35,4 +35,13 @@ return [
         ],
     ],
 
+    'pusher' => [
+        'app_id' => env('PUSHER_APP_ID'),
+        'key' => env('PUSHER_APP_KEY'), // não VITE_ aqui!
+        'secret' => env('PUSHER_APP_SECRET'),
+        'options' => [
+            'cluster' => env('PUSHER_APP_CLUSTER'),
+            'useTLS' => true,
+        ],
+    ],
 ];

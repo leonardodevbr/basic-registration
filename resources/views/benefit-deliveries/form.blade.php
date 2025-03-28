@@ -9,115 +9,129 @@
     </div>
 @endif
 
-<div class="w-full mx-auto bg-white rounded-lg pb-6">
+{{-- resources/views/benefit-deliveries/form.blade.php --}}
+@if($errors->any())
+    <div class="mb-4 p-4 bg-red-100 text-red-700 rounded">
+        <ul>
+            @foreach($errors->all() as $error)
+                <li>{{ $error }}</li>
+            @endforeach
+        </ul>
+    </div>
+@endif
+
+<div x-data="{ tab: 'pessoal' }" class="w-full mx-auto bg-white rounded-lg pb-6">
     <!-- Error container for AJAX errors -->
     <div id="ajax-error" class="mb-4 p-4 bg-red-100 text-red-700 rounded hidden"></div>
 
-    <form id="benefit-delivery-register-form" action="{{ $action }}" class="grid grid-cols-1 md:grid-cols-2 gap-4"
-          method="POST">
+    <!-- Abas -->
+    <div class="border-b mb-4 px-4">
+        <nav class="flex space-x-4">
+            <button type="button" :class="tab === 'pessoal' ? 'border-indigo-500 text-indigo-600' : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300'"
+                    class="whitespace-nowrap py-2 px-1 border-b-2 font-medium text-sm"
+                    @click="tab = 'pessoal'">Dados Pessoais</button>
+
+            <button type="button" :class="tab === 'documentos' ? 'border-indigo-500 text-indigo-600' : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300'"
+                    class="whitespace-nowrap py-2 px-1 border-b-2 font-medium text-sm"
+                    @click="tab = 'documentos'">Documentos</button>
+
+            <button type="button" :class="tab === 'endereco' ? 'border-indigo-500 text-indigo-600' : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300'"
+                    class="whitespace-nowrap py-2 px-1 border-b-2 font-medium text-sm"
+                    @click="tab = 'endereco'">Endereço</button>
+        </nav>
+    </div>
+
+    <form id="benefit-delivery-register-form" action="{{ $action }}" class="px-4" method="POST">
         @csrf
         @method($method)
-        <!-- (Rest of the form remains unchanged) -->
-        <div class="flex flex-col">
-            <div class="mb-4">
+
+        <!-- Aba 1: Selfie + Dados Pessoais -->
+        <div x-show="tab === 'pessoal'" class="grid grid-cols-1 md:grid-cols-2 gap-4">
+            {{-- Selfie --}}
+            <div class="flex flex-col">
                 <label class="block">Selfie:</label>
-                @php
-                    $selfieValue = old('person.selfie', $benefitDelivery->person->selfie_url ?? null);
-                @endphp
+                @php $selfieValue = old('person.selfie', $benefitDelivery->person->selfie_url ?? null); @endphp
 
                 <div id="error-message" class="text-red-500 mt-2 hidden"></div>
-
                 <div class="video-container {{ $selfieValue ? 'hidden' : '' }}">
                     <video id="video" class="border rounded w-full" autoplay></video>
                     <canvas id="canvas"></canvas>
                 </div>
-                <img id="selfie-preview" class="border rounded w-full mt-2 {{ $selfieValue ? '' : 'hidden' }}"
+                <img id="selfie-preview" class="border rounded w-full {{ $selfieValue ? '' : 'hidden' }}"
                      src="{{ $selfieValue }}" alt="Selfie">
-
                 <input type="hidden" name="person[selfie]" id="selfie" value="{{ $selfieValue }}">
 
                 <div class="flex mt-2">
-                    <button type="button" id="flip-btn" class="px-4 mr-2 py-2 bg-gray-500 text-white rounded w-full {{ $selfieValue ? 'hidden' : '' }}">
-                        Espelhar
-                    </button>
-                    <button type="button" id="capture-btn" class="px-4 mr-2 py-2 bg-blue-500 text-white rounded w-full {{ $selfieValue ? 'hidden' : '' }}">
-                        Tirar Selfie
-                    </button>
-                    <button type="button" id="cancel-btn"
-                            class="px-4 py-2 bg-red-500 text-white rounded w-full {{ $selfieValue ? '' : 'hidden' }}">
-                        Cancelar
-                    </button>
-                    <button type="button" id="switch-camera-btn" class="bg-gray-200/80 px-4 py-2 ml-2 rounded  {{ $selfieValue ? 'hidden' : '' }}">
-                        <img src="{{ asset('flip-cam.svg') }}" alt="Trocar câmera" style="max-width:none; width: 32px; height: 32px;">
+                    <button type="button" id="flip-btn" class="px-4 mr-2 py-2 bg-gray-500 text-white rounded w-full {{ $selfieValue ? 'hidden' : '' }}">Espelhar</button>
+                    <button type="button" id="capture-btn" class="px-4 mr-2 py-2 bg-blue-500 text-white rounded w-full {{ $selfieValue ? 'hidden' : '' }}">Tirar Selfie</button>
+                    <button type="button" id="cancel-btn" class="px-4 py-2 bg-red-500 text-white rounded w-full {{ $selfieValue ? '' : 'hidden' }}">Cancelar</button>
+                    <button type="button" id="switch-camera-btn" class="bg-gray-200/80 px-4 py-2 ml-2 rounded {{ $selfieValue ? 'hidden' : '' }}">
+                        <img src="{{ asset('flip-cam.svg') }}" alt="Trocar câmera" style="width: 32px; height: 32px;">
                     </button>
                 </div>
             </div>
+
+            {{-- Dados Pessoais --}}
+            <div class="flex flex-col space-y-4">
+                <div>
+                    <label class="block">CPF:</label>
+                    <input type="text" name="person[cpf]" class="border rounded w-full p-2"
+                           value="{{ old('person.cpf', $benefitDelivery->person->cpf ?? '') }}">
+                </div>
+                <div>
+                    <label class="block">Nome:</label>
+                    <input type="text" name="person[name]" class="border rounded w-full p-2"
+                           value="{{ old('person.name', $benefitDelivery->person->name ?? '') }}">
+                </div>
+                <div>
+                    <label class="block">NIS:</label>
+                    <input type="text" name="person[nis]" class="border rounded w-full p-2"
+                           value="{{ old('person.nis', $benefitDelivery->person->nis ?? '') }}">
+                </div>
+                <div>
+                    <label class="block">Telefone:</label>
+                    <input type="text" name="person[phone]" class="border rounded w-full p-2"
+                           value="{{ old('person.phone', $benefitDelivery->person->phone ?? '') }}">
+                </div>
+                <div>
+                    <label class="block">Nome da Mãe:</label>
+                    <input type="text" name="person[mother_name]" class="border rounded w-full p-2"
+                           value="{{ old('person.mother_name', $benefitDelivery->person->mother_name ?? '') }}">
+                </div>
+                <div>
+                    <label class="block">Nome do Pai:</label>
+                    <input type="text" name="person[father_name]" class="border rounded w-full p-2"
+                           value="{{ old('person.father_name', $benefitDelivery->person->father_name ?? '') }}">
+                </div>
+                <div>
+                    <label class="block">Data de Nascimento:</label>
+                    <input type="date" name="person[birth_date]" class="border rounded w-full p-2"
+                           value="{{ old('person.birth_date', $benefitDelivery->person->birth_date ?? '') }}">
+                </div>
+                <div>
+                    <label class="block">Sexo:</label>
+                    <select name="person[gender]" class="border rounded w-full p-2">
+                        <option value="">Selecione</option>
+                        <option value="M" {{ old('person.gender', $benefitDelivery->person->gender ?? '') == 'M' ? 'selected' : '' }}>Masculino</option>
+                        <option value="F" {{ old('person.gender', $benefitDelivery->person->gender ?? '') == 'F' ? 'selected' : '' }}>Feminino</option>
+                    </select>
+                </div>
+            </div>
         </div>
-        <div class="flex flex-col">
-            <div class="mb-4">
-                <label class="block">CPF:</label>
-                <input type="text" name="person[cpf]" class="border rounded w-full p-2"
-                       value="{{ old('person.cpf', $benefitDelivery->person->cpf ?? '') }}">
-            </div>
 
-            <div class="mb-4">
-                <label class="block">Nome:</label>
-                <input type="text" name="person[name]" class="border rounded w-full p-2"
-                       value="{{ old('person.name', $benefitDelivery->person->name ?? '') }}">
-            </div>
-
-            <div class="mb-4">
-                <label class="block">NIS:</label>
-                <input type="text" name="person[nis]" class="border rounded w-full p-2"
-                       value="{{ old('person.nis', $benefitDelivery->person->nis ?? '') }}">
-            </div>
-
-            <div class="mb-4">
-                <label class="block">Telefone:</label>
-                <input type="text" name="person[phone]" class="border rounded w-full p-2"
-                       value="{{ old('person.phone', $benefitDelivery->person->phone ?? '') }}">
-            </div>
-
-            <div class="mb-4">
-                <label class="block">Nome da Mãe:</label>
-                <input type="text" name="person[mother_name]" class="border rounded w-full p-2"
-                       value="{{ old('person.mother_name', $benefitDelivery->person->mother_name ?? '') }}">
-            </div>
-
-            <div class="mb-4">
-                <label class="block">Nome do Pai:</label>
-                <input type="text" name="person[father_name]" class="border rounded w-full p-2"
-                       value="{{ old('person.father_name', $benefitDelivery->person->father_name ?? '') }}">
-            </div>
-
-            <div class="mb-4">
-                <label class="block">Data de Nascimento:</label>
-                <input type="date" name="person[birth_date]" class="border rounded w-full p-2"
-                       value="{{ old('person.birth_date', $benefitDelivery->person->birth_date ?? '') }}">
-            </div>
-
-            <div class="mb-4">
-                <label class="block">Sexo:</label>
-                <select name="person[gender]" class="border rounded w-full p-2">
-                    <option value="">Selecione</option>
-                    <option value="M" {{ old('person.gender', $benefitDelivery->person->gender ?? '') == 'M' ? 'selected' : '' }}>Masculino</option>
-                    <option value="F" {{ old('person.gender', $benefitDelivery->person->gender ?? '') == 'F' ? 'selected' : '' }}>Feminino</option>
-                </select>
-            </div>
-
-            <div class="mb-4">
+        <!-- Aba 2: Documentos -->
+        <div x-show="tab === 'documentos'" x-cloak class="grid grid-cols-1 md:grid-cols-2 gap-4 mt-4">
+            <div>
                 <label class="block">RG:</label>
                 <input type="text" name="person[rg]" class="border rounded w-full p-2"
                        value="{{ old('person.rg', $benefitDelivery->person->rg ?? '') }}">
             </div>
-
-            <div class="mb-4">
+            <div>
                 <label class="block">Orgão Emissor:</label>
                 <input type="text" name="person[issuing_agency]" class="border rounded w-full p-2"
                        value="{{ old('person.issuing_agency', $benefitDelivery->person->issuing_agency ?? '') }}">
             </div>
-
-            <div class="mb-4">
+            <div>
                 <label class="block">Raça/Cor:</label>
                 <select name="person[race_color]" class="border rounded w-full p-2">
                     <option value="">Selecione</option>
@@ -128,21 +142,62 @@
                     <option value="5" {{ old('person.race_color', $benefitDelivery->person->race_color ?? '') == '5' ? 'selected' : '' }}>Indígena</option>
                 </select>
             </div>
-
-            <div class="mb-4">
+            <div>
                 <label class="block">Nacionalidade:</label>
                 <input type="text" name="person[nationality]" class="border rounded w-full p-2"
                        value="{{ old('person.nationality', $benefitDelivery->person->nationality ?? 'Brasileira') }}">
             </div>
-
-            <div class="mb-4">
+            <div>
                 <label class="block">Naturalidade:</label>
                 <input type="text" name="person[naturalness]" class="border rounded w-full p-2"
                        value="{{ old('person.naturalness', $benefitDelivery->person->naturalness ?? '') }}">
             </div>
+        </div>
 
+        <!-- Aba 3: Endereço -->
+        <div x-show="tab === 'endereco'" x-cloak class="grid grid-cols-1 md:grid-cols-2 gap-4 mt-4">
+            <div>
+                <label class="block">CEP:</label>
+                <input type="text" name="person[address][cep]" class="border rounded w-full p-2"
+                       value="{{ old('person.address.cep', '') }}">
+            </div>
+            <div>
+                <label class="block">Rua:</label>
+                <input type="text" name="person[address][street]" class="border rounded w-full p-2"
+                       value="{{ old('person.address.street', '') }}">
+            </div>
+            <div>
+                <label class="block">Número:</label>
+                <input type="text" name="person[address][number]" class="border rounded w-full p-2"
+                       value="{{ old('person.address.number', '') }}">
+            </div>
+            <div>
+                <label class="block">Complemento:</label>
+                <input type="text" name="person[address][complement]" class="border rounded w-full p-2"
+                       value="{{ old('person.address.complement', '') }}">
+            </div>
+            <div>
+                <label class="block">Bairro:</label>
+                <input type="text" name="person[address][neighborhood]" class="border rounded w-full p-2"
+                       value="{{ old('person.address.neighborhood', '') }}">
+            </div>
+            <div>
+                <label class="block">Referência:</label>
+                <input type="text" name="person[address][reference]" class="border rounded w-full p-2"
+                       value="{{ old('person.address.reference', '') }}">
+            </div>
+            <div>
+                <label class="block">Cidade:</label>
+                <input type="text" name="person[address][city]" class="border rounded w-full p-2"
+                       value="{{ old('person.address.city', '') }}">
+            </div>
+            <div>
+                <label class="block">Estado (UF):</label>
+                <input type="text" name="person[address][state]" class="border rounded w-full p-2"
+                       value="{{ old('person.address.state', '') }}">
+            </div>
 
-            <div class="mb-4">
+            <div>
                 <label class="block">Benefício:</label>
                 <select name="benefit_id" class="border rounded w-full p-2">
                     @foreach($benefits as $benefit)
@@ -154,7 +209,7 @@
             </div>
 
             @can('view unities')
-                <div class="mb-4">
+                <div>
                     <label class="block">Unidade:</label>
                     <select name="unit_id" class="border rounded w-full p-2">
                         @foreach($unities as $unit)
@@ -165,65 +220,15 @@
                     </select>
                 </div>
             @endcan
+        </div>
 
-            <div class="mb-4">
-                <label class="block">CEP:</label>
-                <input type="text" name="person[address][cep]" class="border rounded w-full p-2"
-                       value="{{ old('person.address.cep', '') }}">
-            </div>
-
-            <div class="mb-4">
-                <label class="block">Rua:</label>
-                <input type="text" name="person[address][street]" class="border rounded w-full p-2"
-                       value="{{ old('person.address.street', '') }}">
-            </div>
-
-            <div class="mb-4">
-                <label class="block">Número:</label>
-                <input type="text" name="person[address][number]" class="border rounded w-full p-2"
-                       value="{{ old('person.address.number', '') }}">
-            </div>
-
-            <div class="mb-4">
-                <label class="block">Complemento:</label>
-                <input type="text" name="person[address][complement]" class="border rounded w-full p-2"
-                       value="{{ old('person.address.complement', '') }}">
-            </div>
-
-            <div class="mb-4">
-                <label class="block">Bairro:</label>
-                <input type="text" name="person[address][neighborhood]" class="border rounded w-full p-2"
-                       value="{{ old('person.address.neighborhood', '') }}">
-            </div>
-
-            <div class="mb-4">
-                <label class="block">Referência:</label>
-                <input type="text" name="person[address][reference]" class="border rounded w-full p-2"
-                       value="{{ old('person.address.reference', '') }}">
-            </div>
-
-            <div class="mb-4">
-                <label class="block">Cidade:</label>
-                <input type="text" name="person[address][city]" class="border rounded w-full p-2"
-                       value="{{ old('person.address.city', '') }}">
-            </div>
-
-            <div class="mb-4">
-                <label class="block">Estado (UF):</label>
-                <input type="text" name="person[address][state]" class="border rounded w-full p-2"
-                       value="{{ old('person.address.state', '') }}">
-            </div>
-
-
-            <!-- (Opcional) Campo unit_id se necessário -->
-            <button type="submit" id="save-btn" class="w-full px-4 py-2 bg-indigo-500 text-white rounded">Salvar</button>
-            <a class="w-full px-4 py-2 bg-gray-500 text-white rounded text-center mt-2" href="{{ route('benefit-deliveries.index') }}">
-                Voltar
-            </a>
+        <!-- Botões -->
+        <div class="mt-6 flex justify-end gap-4">
+            <a href="{{ route('benefit-deliveries.index') }}" class="px-4 py-2 bg-gray-500 text-white rounded">Voltar</a>
+            <button type="submit" id="save-btn" class="px-4 py-2 bg-indigo-500 text-white rounded">Salvar</button>
         </div>
     </form>
 </div>
-
 
 @php
     $isEditing = isset($benefitDelivery) && $benefitDelivery->exists;
@@ -278,12 +283,16 @@
             const loadingOverlay = document.getElementById("loading-overlay");
             const searchError = document.getElementById("search-error");
             const submitBtn = document.getElementById("save-btn");
-
+            const searchPersonBtn = document.getElementById("searchPersonBtn");
+            const openSearchModalBtn = document.getElementById("open-search-modal");
 
             // Exibir modal apenas se for novo registro
             if (!isEditing) {
                 searchModal.classList.remove("hidden");
                 searchInput.focus();
+
+                // Oculta botão de pesquisa enquanto o modal está aberto
+                if (searchPersonBtn) searchPersonBtn.classList.add("hidden");
             }
 
             searchInput?.addEventListener("keypress", async function (e) {
@@ -327,6 +336,8 @@
             if (closeSearchModal) {
                 closeSearchModal.addEventListener("click", function () {
                     searchModal.classList.add("hidden");
+                    // Exibe botão de pesquisa após fechar o modal
+                    if (searchPersonBtn) searchPersonBtn.classList.remove("hidden");
                 });
             }
 
@@ -351,6 +362,7 @@
                         preencherEndereco(addressData);  // 👈 vamos criar se quiser
 
                         searchModal.classList.add("hidden");
+                        if (searchPersonBtn) searchPersonBtn.classList.remove("hidden");
                     } else if (data.length > 1) {
                         exibirResultados(data);
                     } else {
@@ -665,6 +677,16 @@
                             confirmButtonText: 'OK'
                         });
                     }
+                });
+            }
+
+            if (openSearchModalBtn) {
+                openSearchModalBtn.addEventListener("click", function () {
+                    searchModal.classList.remove("hidden");
+                    searchInput.focus();
+
+                    // Oculta botão de pesquisa enquanto o modal está aberto
+                    if (searchPersonBtn) searchPersonBtn.classList.add("hidden");
                 });
             }
         });

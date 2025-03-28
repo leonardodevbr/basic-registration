@@ -12,8 +12,21 @@
                 </ol>
             </nav>
 
-            <div class="bg-white md:shadow-md md:rounded-md mf:p-6 px-3 py-6">
-                <h2 class="text-xl mb-4">Registrar entrega de benefício</h2>
+            <div class="bg-white md:shadow-md md:rounded-md py-6">
+                <div class="flex items-center justify-between mb-4 px-3">
+                    <h2 class="text-xl">Registrar entrega de benefício</h2>
+                    <div id="searchPersonBtn" class="flex justify-end">
+                        <button type="button" id="open-search-modal" class="text-sm text-blue-600 hover:underline flex items-center gap-1">
+                            <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" fill="none" viewBox="0 0 24 24"
+                                 stroke="currentColor">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                      d="M21 21l-4.35-4.35M11 18a7 7 0 100-14 7 7 0 000 14z"/>
+                            </svg>
+                            Pesquisar Pessoa
+                        </button>
+                    </div>
+                </div>
+
                 @include('benefit-deliveries.form', ['action' => route('benefit-deliveries.store'), 'method' => 'POST'])
             </div>
         </div>
