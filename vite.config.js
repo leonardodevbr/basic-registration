@@ -16,7 +16,7 @@ export default defineConfig({
         },
         hmr: {
             protocol: 'wss',
-            host: '192.168.0.112', // seu IP na rede
+            host: '192.168.0.108', // seu IP na rede
             port: 5173,
         },
     },

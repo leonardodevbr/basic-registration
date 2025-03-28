@@ -27,10 +27,26 @@ class AuthenticatedSessionController extends Controller
      */
     public function store(LoginRequest $request): RedirectResponse
     {
-        $request->authenticate();
-        $request->session()->regenerate();
+        $request->validate([
+            'login' => 'required|string', // pode ser email ou matrícula
+            'password' => 'required|string',
+        ]);
 
-        return redirect()->intended(route('dashboard', absolute: false));
+        $login = $request->input('login');
+        $password = $request->input('password');
+
+        $credentials = filter_var($login, FILTER_VALIDATE_EMAIL)
+            ? ['email' => $login, 'password' => $password]
+            : ['registration_number' => $login, 'password' => $password];
+
+        if (Auth::attempt($credentials, $request->boolean('remember'))) {
+            $request->session()->regenerate();
+            return redirect()->intended(RouteServiceProvider::HOME);
+        }
+
+        return back()->withErrors([
+            'login' => __('Credenciais inválidas.'),
+        ]);
     }
 
     /**

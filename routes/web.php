@@ -9,6 +9,7 @@ use App\Http\Controllers\ProfileController;
 use App\Http\Controllers\RoleController;
 use App\Http\Controllers\UserController;
 use App\Http\Controllers\UserPermissionController;
+use App\Http\Controllers\UserImportController;
 use Illuminate\Support\Facades\Route;
 use Rap2hpoutre\LaravelLogViewer\LogViewerController;
 
@@ -60,6 +61,11 @@ Route::middleware(['auth'])->group(function () {
     Route::group(['prefix' => 'api'], function ($route) {
         $route->get('/buscar-pessoa', [PersonController::class, 'buscar'])->name('api.buscar-pessoa');
     });
+});
+
+Route::middleware(['auth', 'permission:import users'])->group(function () {
+    Route::get('/user-import', [UserImportController::class, 'form'])->name('users.import.form');
+    Route::post('/user-import', [UserImportController::class, 'import'])->name('users.import.process');
 });
 
 Route::middleware(['auth', 'permission:manage roles and permissions'])->group(function () {
