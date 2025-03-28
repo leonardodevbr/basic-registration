@@ -1,4 +1,5 @@
 {{-- resources/views/access-control/index.blade.php --}}
+@section('title', 'Controle de Acesso')
 <x-app-layout>
     <div class="md:py-12"
          x-data="accessControlTabs('{{ $tab }}')"

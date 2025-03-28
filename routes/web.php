@@ -10,8 +10,17 @@ use App\Http\Controllers\RoleController;
 use App\Http\Controllers\UserController;
 use App\Http\Controllers\UserPermissionController;
 use App\Http\Controllers\UserImportController;
+use App\Http\Controllers\WebPushController;
 use Illuminate\Support\Facades\Route;
 use Rap2hpoutre\LaravelLogViewer\LogViewerController;
+use Jenssegers\Agent\Agent;
+
+Route::get('/teste', function (){
+    $benefitDelivery = \App\Models\BenefitDelivery::find(1);
+    $agent = new Agent();
+    $webPush = new WebPushController($agent);
+    $webPush->sendNotification($benefitDelivery);
+});
 
 Route::get('/', fn() => redirect()->route('login'));
 
@@ -22,6 +31,8 @@ Route::middleware(['auth'])->group(function () {
     Route::get('/dashboard', [DashboardController::class, 'index'])
         ->name('dashboard')
         ->middleware('permission:view dashboard');
+
+    Route::post('/webpush/subscribe', [WebPushController::class, 'subscribe'])->name('webpush.subscribe');
 
     Route::patch('/benefit-deliveries/{benefitDelivery}/deliver', [BenefitDeliveryController::class, 'deliver'])
         ->name('benefit-deliveries.deliver')

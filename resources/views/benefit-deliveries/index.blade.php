@@ -1,4 +1,5 @@
 <!-- resources/views/people/index.blade.php -->
+@section('title', 'Gestão de Benefícios')
 <x-app-layout>
     <div class="md:py-12">
         <div class="max-w-7xl mx-auto sm:px-6 lg:px-8">
@@ -16,14 +17,14 @@
                         >
                     </li>
                     <li><span class="mx-2">/</span></li>
-                    <li>Benefícios entregues</li>
+                    <li>Gestão de Benefícios</li>
                 </ol>
             </nav>
             <!-- Container Principal -->
             <div class="bg-white md:shadow-md md:rounded-md mf:p-6 px-3 py-6">
                 <div class="flex justify-between mb-4 flex-col">
                     <h2 class="md:text-xl font-semibold text-gray-800">
-                        Benefícios Entregues
+                        Gestão de Benefícios
                     </h2>
                     <div class="flex justify-between items-end">
                         <div class="flex flex-col">

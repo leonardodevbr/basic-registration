@@ -1,4 +1,5 @@
 {{-- resources/views/access-control/roles/create.blade.php --}}
+@section('title', 'Cadastrar Papel')
 <x-app-layout>
     <div class="md:py-12">
         <div class="max-w-7xl mx-auto sm:px-6 lg:px-8">

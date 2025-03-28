@@ -6,6 +6,13 @@
     display: none !important;
 }
 
+.boldonse-regular {
+    font-family: "Boldonse", system-ui;
+    font-weight: 400;
+    font-style: normal;
+    line-height: 2;
+}
+
 #loading-overlay {
     position: fixed;
     top: 0;

@@ -9,7 +9,9 @@ abstract class Controller
 {
     protected Agent $agent;
 
-    public function __construct(Agent $agent)
+    public function __construct(
+        Agent $agent
+    )
     {
         $this->agent = $agent;
 

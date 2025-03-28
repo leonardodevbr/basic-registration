@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers;
 
+use App\Events\DeliveryStatusUpdated;
 use App\Http\Requests\BenefitDeliveryStoreRequest;
 use App\Http\Requests\BenefitDeliveryUpdateRequest;
 use App\Jobs\ProcessSelfieImage;
@@ -9,13 +10,22 @@ use App\Models\Benefit;
 use App\Models\BenefitDelivery;
 use App\Models\Person;
 use App\Models\Unit;
+use App\Services\RealtimeNotificationService;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Cache;
 use Illuminate\Support\Facades\View;
+use Jenssegers\Agent\Agent;
 use Mpdf\Mpdf;
 
 class BenefitDeliveryController extends Controller
 {
+    protected WebPushController $webPushController;
+    public function __construct(Agent $agent, WebPushController $webPushController)
+    {
+        parent::__construct($agent);
+        $this->webPushController = $webPushController;
+    }
+
     public function index(Request $request)
     {
         $sortBy = $request->get('sort_by', 'status');
@@ -323,6 +333,7 @@ class BenefitDeliveryController extends Controller
             'delivered_at' => now(),
             'delivered_by_id' => auth()->check() ? auth()->user()->id : null,
         ]);
+        $this->notifyStatusUpdated($benefitDelivery);
 
         return response()->json([
             'success' => true,
@@ -377,6 +388,7 @@ class BenefitDeliveryController extends Controller
             'delivered_at' => now(),
             'delivered_by_id' => auth()->check() ? auth()->user()->id : null,
         ]);
+        $this->notifyStatusUpdated($benefitDelivery);
 
         return response()->json([
             'success' => true,
@@ -391,6 +403,7 @@ class BenefitDeliveryController extends Controller
 
         // Atualizar o status do antigo registro para "REISSUED"
         $oldBenefit->update(['status' => 'REISSUED']);
+        $this->notifyStatusUpdated($oldBenefit);
 
         // Gerar novo ticket
         $ticketCode = random_int(100000, 999999);
@@ -424,7 +437,6 @@ class BenefitDeliveryController extends Controller
         // 🔹 Buscar a entrega do benefício e carregar seus relacionamentos
         $benefitDelivery = BenefitDelivery::with(['person', 'benefit', 'registeredBy', 'deliveredBy'])
             ->findOrFail($id);
-//        dd($benefitDelivery->toArray());
 
         // 🔹 Gerar o HTML do recibo usando uma view Blade específica
         $html = View::make('benefit-deliveries.receipt', compact('benefitDelivery'))->render();
@@ -446,6 +458,16 @@ class BenefitDeliveryController extends Controller
 
         // 🔹 Exibir o PDF diretamente no navegador
         $mpdf->Output("Recibo_Beneficio_{$benefitDelivery->id}.pdf", 'I'); // 'I' = Inline (abre no navegador)
+    }
+
+    private function notifyStatusUpdated(BenefitDelivery $benefitDelivery): void
+    {
+        RealtimeNotificationService::trigger('benefit-status', 'status.updated', [
+            'personId'   => $benefitDelivery->person_id,
+            'status'     => $benefitDelivery->status,
+            'updatedBy' => auth()->id()
+        ]);
+        $this->webPushController->sendNotification($benefitDelivery);
     }
 
 }

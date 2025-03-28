@@ -1,16 +1,16 @@
 import Pusher from 'pusher-js';
 
-Pusher.logToConsole = false;
+const currentUserId = document.querySelector('meta[name="user-id"]').content;
+
+Pusher.logToConsole = true;
 
 const pusher = new Pusher(import.meta.env.VITE_PUSHER_APP_KEY, {
     cluster: import.meta.env.VITE_PUSHER_APP_CLUSTER,
-    forceTLS: true,
+    forceTLS: true
 });
 
-const channel = pusher.subscribe('person-updates');
-
-channel.bind('selfie.updated', function (data) {
-    const { personId, thumbUrl } = data;
+pusher.subscribe('person-updates').bind('selfie.updated', function (data) {
+    const {personId, thumbUrl} = data;
 
     const row = document.querySelector(`tr[data-person-id="${personId}"]`);
     if (row) {
@@ -43,5 +43,19 @@ channel.bind('selfie.updated', function (data) {
                 }, 10);
             };
         }
+    }
+});
+
+pusher.subscribe('benefit-status').bind('status.updated', function (data) {
+    console.log(data)
+    // if (parseInt(data.updated_by) === parseInt(currentUserId)) return;
+
+    // Aqui você pode emitir uma notificação visual
+    console.log(`Status atualizado da entrega (pessoa ${data.personId}): ${data.status}`);
+
+    const row = document.querySelector(`tr[data-person-id="${data.personId}"]`);
+    if (row) {
+        row.classList.add('bg-yellow-50');
+        setTimeout(() => row.classList.remove('bg-yellow-50'), 2000);
     }
 });

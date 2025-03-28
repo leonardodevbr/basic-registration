@@ -4,9 +4,12 @@ namespace App\Models;
 
 use App\Models\Base\User as BaseUser;
 use Illuminate\Database\Eloquent\Relations\HasOne;
+use NotificationChannels\WebPush\HasPushSubscriptions;
 
 class User extends BaseUser
 {
+    use HasPushSubscriptions;
+
     public function hasPermissionTo($permission, $guardName = null): bool
     {
         // Bloqueio manual via denied_permissions (por nome)
