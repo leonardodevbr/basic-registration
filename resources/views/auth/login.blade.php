@@ -7,9 +7,9 @@
             <div class="w-full max-w-md mx-auto">
 
                 {{-- Logo + Nome --}}
-                <div class="flex flex-col sm:flex-row items-center sm:items-center gap-4 sm:gap-6 justify-center sm:justify-start">
+                <div class="flex flex-row items-center sm:items-center gap-4 sm:gap-6 justify-center sm:justify-start">
                     <x-application-logo class="w-24 sm:w-[180px] rounded-full" />
-                    <span class="boldonse-regular text-[#004b6b] text-[40px] sm:text-[65px] leading-tight">SIViS</span>
+                    <span class="boldonse-regular text-[#004b6b] text-[40px] sm:text-[65px] mt-6 sm:mt-10 leading-tight">SIViS</span>
                 </div>
 
                 {{-- Subtítulo --}}
@@ -53,7 +53,7 @@
 
                     <!-- Submit -->
                     <div>
-                        <x-primary-button class="w-full justify-center bg-[#004b6b] hover:bg-[#00384e]">
+                        <x-primary-button class="w-full justify-center bg-[#004b6b] py-3 hover:bg-[#00384e]">
                             {{ __('Acessar') }}
                         </x-primary-button>
                     </div>
@@ -71,10 +71,10 @@
             <div class="absolute inset-0 opacity-5 z-0 bg-login" style="background-image: url('{{ asset('/img/bg-login.png') }}')"></div>
 
             <div class="z-10 px-6 md:py-12 py-3 md:px-10 md:py-0 text-center md:text-left max-w-xl flex flex-col justify-center h-full">
-                <h1 class="text-2xl md:text-3xl font-bold mb-4 boldonse-regular leading-tight slogan">
-                    Acompanhamento social com<br class="hidden md:block">
-                    inteligência e humanidade.
-                </h1>
+                <div class="font-bold mb-4 boldonse-regular leading-tight slogan flex flex-col">
+                    <span>Acompanhamento social com</span>
+                    <h1>inteligência e humanidade.</h1>
+                </div>
                 <p class="text-base md:text-lg text-blue-100 leading-relaxed">
                     O SIViS fortalece o trabalho das equipes da assistência social com dados precisos, organização e agilidade na gestão de pessoas, famílias e territórios.
                 </p>

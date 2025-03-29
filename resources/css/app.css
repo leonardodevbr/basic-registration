@@ -25,9 +25,21 @@
     line-height: 1.7;
 }
 
+.slogan {
+    font-size: 1.6rem;
+}
+
+.slogan h1 {
+    font-size: 1.9rem;
+}
+
 @media screen and (max-width: 640px) {
     .slogan {
-        font-size: 18px;
+        font-size: 1.1rem;
+    }
+
+    .slogan h1 {
+        font-size: 1.7rem;
     }
 }
 
