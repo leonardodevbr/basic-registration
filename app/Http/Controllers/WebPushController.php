@@ -13,21 +13,24 @@ class WebPushController extends Controller
     public function subscribe(Request $request)
     {
         $subscription = $request->getContent();
+        $userId = auth()->id(); // Pegue o ID do usuário logado
 
-        if (!$subscription) {
+        if (!$subscription || !$userId) {
             return response()->json(['error' => 'Subscription inválida'], 400);
         }
 
-        file_put_contents(storage_path('push-subscriptions.json'), $subscription);
+        $allSubscriptions = json_decode(file_get_contents(storage_path('push-subscriptions.json')), true) ?? [];
+        $allSubscriptions[$userId] = json_decode($subscription, true);
+
+        file_put_contents(storage_path('push-subscriptions.json'), json_encode($allSubscriptions));
 
         return response()->json(['success' => 'Inscrição salva!']);
     }
 
+
     public function sendNotification(BenefitDelivery $benefitDelivery)
     {
-        $subscriptionData = json_decode(file_get_contents(storage_path('push-subscriptions.json')), true);
-        $subscription = Subscription::create($subscriptionData);
-
+        $allSubscriptions = json_decode(file_get_contents(storage_path('push-subscriptions.json')), true);
         $webPush = new WebPush([
             'VAPID' => [
                 'subject' => config('app.url'),
@@ -36,27 +39,27 @@ class WebPushController extends Controller
             ],
         ]);
 
-        // Dados da notificação
-        $title = "Entrega atualizada";
-        $statusLabel = match ($benefitDelivery->status) {
-            'PENDING' => 'Pendente',
-            'DELIVERED' => 'Entregue',
-            'EXPIRED' => 'Expirada',
-            'REISSUED' => 'Reemitida',
-            default => 'Atualizada',
-        };
+        $currentUserId = auth()->id();
 
-        $options = [
-            'title' => "Senha {$benefitDelivery->ticket_code} - {$statusLabel}",
-            'body' => "Status alterado para: {$statusLabel}.",
-            'icon' => asset('/img/logo.png'),
-            'tag' => 'delivery-'.$benefitDelivery->id,
-            'data' => [
-                'url' => route('benefit-deliveries.index')."?highlight={$benefitDelivery->id}",
-            ]
-        ];
+        foreach ($allSubscriptions as $userId => $subscriptionData) {
+            if ((int)$userId === (int)$currentUserId) {
+                continue; // pula o autor
+            }
 
-        $webPush->queueNotification($subscription, json_encode($options));
+            $subscription = Subscription::create($subscriptionData);
+
+            $options = [
+                'title' => "Senha {$benefitDelivery->ticket_code} - {$statusLabel}",
+                'body' => "Status alterado para: {$statusLabel}.",
+                'icon' => asset('/img/logo.png'),
+                'tag' => 'delivery-'.$benefitDelivery->id,
+                'data' => [
+                    'url' => route('benefit-deliveries.index')."?highlight={$benefitDelivery->id}",
+                ]
+            ];
+
+            $webPush->queueNotification($subscription, json_encode($options));
+        }
 
         foreach ($webPush->flush() as $report) {
             if ($report->isSuccess()) {
@@ -68,4 +71,5 @@ class WebPushController extends Controller
 
         return response()->json(['success' => 'Notificação enviada!']);
     }
+
 }
