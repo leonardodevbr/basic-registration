@@ -6,7 +6,7 @@
         <meta name="csrf-token" content="{{ csrf_token() }}">
         <meta name="user-id" content="{{ auth()->id() }}">
 
-        <title>@yield('title', 'Página') | {{ config('app.name', 'Laravel') }}</title>
+        <title>@yield('title', 'Página') | {{ config('app.name', 'SIViS') }}</title>
 
         <x-favicons></x-favicons>
 
