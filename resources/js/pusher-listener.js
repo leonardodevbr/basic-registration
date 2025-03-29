@@ -9,42 +9,44 @@ const pusher = new Pusher(import.meta.env.VITE_PUSHER_APP_KEY, {
     forceTLS: true
 });
 
-pusher.subscribe('person-updates').bind('selfie.updated', function (data) {
-    const {personId, thumbUrl} = data;
+pusher.subscribe('benefit-status').bind('status.updated', function (data) {
+    if (parseInt(data.updated_by) === parseInt(currentUserId)) return;
 
-    const row = document.querySelector(`tr[data-person-id="${personId}"]`);
-    if (row) {
-        const img = row.querySelector("img");
-        if (img) {
-            // Cria o spinner (tailwind style)
-            const spinner = document.createElement('div');
-            spinner.className = 'w-16 h-16 rounded-full flex items-center justify-center bg-gray-100';
-            spinner.innerHTML = `
-                <svg class="animate-spin h-5 w-5 text-gray-500" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
-                    <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
-                    <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8v8H4z"></path>
-                </svg>
-            `;
+    const { personId, status } = data;
+    const statusLabel = {
+        'PENDING': 'Pendente',
+        'DELIVERED': 'Entregue',
+        'EXPIRED': 'Expirada',
+        'REISSUED': 'Reemitida'
+    }[status] || 'Atualizada';
 
-            // Substitui a imagem atual pelo spinner temporariamente
-            img.replaceWith(spinner);
+    // Toast visual
+    const toast = document.createElement('div');
+    toast.className = 'fixed top-4 right-4 bg-white border-l-4 border-blue-500 shadow-lg p-4 rounded-md z-50 animate-fade-in';
+    toast.innerHTML = `
+        <strong class="text-blue-600 block mb-1">Entrega Atualizada</strong>
+        <span>Entrega de pessoa ${personId} marcada como <b>${statusLabel}</b>.</span>
+    `;
+    document.body.appendChild(toast);
 
-            // Cria a nova imagem
-            const newImg = new Image();
-            newImg.src = thumbUrl;
-            newImg.className = img.className;
-            newImg.style.opacity = 0;
+    setTimeout(() => toast.remove(), 5000); // Remove depois de 5s
 
-            newImg.onload = () => {
-                spinner.replaceWith(newImg); // Troca spinner pela imagem
-                setTimeout(() => {
-                    newImg.style.transition = 'opacity 0.3s ease';
-                    newImg.style.opacity = 1;
-                }, 10);
-            };
-        }
+    // Incrementa badge (sino)
+    let badge = document.querySelector('#notification-badge');
+    if (badge) {
+        badge.textContent = parseInt(badge.textContent || "0") + 1;
+        badge.classList.remove('hidden');
     }
+
+    // Salva no localStorage (pra exibir depois numa lista)
+    const notifications = JSON.parse(localStorage.getItem('notifications') || '[]');
+    notifications.unshift({
+        message: `Entrega de pessoa ${personId} marcada como ${statusLabel}.`,
+        timestamp: new Date().toISOString()
+    });
+    localStorage.setItem('notifications', JSON.stringify(notifications));
 });
+
 
 pusher.subscribe('benefit-status').bind('status.updated', function (data) {
     if (parseInt(data.updated_by) === parseInt(currentUserId)) return;
