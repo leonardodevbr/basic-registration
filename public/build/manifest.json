@@ -4,7 +4,7 @@
     "name": "_commonjsHelpers"
   },
   "resources/css/app.css": {
-    "file": "assets/app-BP2-Ld4S.css",
+    "file": "assets/app-B7KqLFzk.css",
     "src": "resources/css/app.css",
     "isEntry": true
   },
@@ -24,7 +24,7 @@
     "isEntry": true
   },
   "resources/js/pusher-listener.js": {
-    "file": "assets/pusher-listener-Cf39sICg.js",
+    "file": "assets/pusher-listener-A6qwtXKh.js",
     "name": "pusher-listener",
     "src": "resources/js/pusher-listener.js",
     "isEntry": true,

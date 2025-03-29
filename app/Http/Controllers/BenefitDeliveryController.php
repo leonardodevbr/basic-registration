@@ -462,12 +462,12 @@ class BenefitDeliveryController extends Controller
 
     private function notifyStatusUpdated(BenefitDelivery $benefitDelivery): void
     {
+        $this->webPushController->sendNotification($benefitDelivery);
         RealtimeNotificationService::trigger('benefit-status', 'status.updated', [
             'personId'   => $benefitDelivery->person_id,
             'status'     => $benefitDelivery->status,
             'updatedBy' => auth()->id()
         ]);
-        $this->webPushController->sendNotification($benefitDelivery);
     }
 
 }

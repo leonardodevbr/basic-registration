@@ -47,8 +47,7 @@ pusher.subscribe('person-updates').bind('selfie.updated', function (data) {
 });
 
 pusher.subscribe('benefit-status').bind('status.updated', function (data) {
-    console.log(data)
-    // if (parseInt(data.updated_by) === parseInt(currentUserId)) return;
+    if (parseInt(data.updated_by) === parseInt(currentUserId)) return;
 
     // Aqui você pode emitir uma notificação visual
     console.log(`Status atualizado da entrega (pessoa ${data.personId}): ${data.status}`);
@@ -57,5 +56,6 @@ pusher.subscribe('benefit-status').bind('status.updated', function (data) {
     if (row) {
         row.classList.add('bg-yellow-50');
         setTimeout(() => row.classList.remove('bg-yellow-50'), 2000);
+        row.remove();
     }
 });
