@@ -6,11 +6,29 @@
     display: none !important;
 }
 
+.bg-login {
+    background-size: 85%;
+    background-position: center;
+}
+
+@media (min-width: 640px) {
+    .bg-login {
+        background-size: 50%;
+        background-position: top;
+    }
+}
+
 .boldonse-regular {
     font-family: "Boldonse", system-ui;
     font-weight: 400;
     font-style: normal;
-    line-height: 2;
+    line-height: 1.7;
+}
+
+@media screen and (max-width: 640px) {
+    .slogan {
+        font-size: 18px;
+    }
 }
 
 #loading-overlay {
@@ -35,8 +53,12 @@
 }
 
 @keyframes spin {
-    from { transform: rotate(0deg); }
-    to { transform: rotate(360deg); }
+    from {
+        transform: rotate(0deg);
+    }
+    to {
+        transform: rotate(360deg);
+    }
 }
 
 .video-container {
@@ -84,10 +106,22 @@
 }
 
 @keyframes fadeInOut {
-    0% { opacity: 0; transform: translateY(10px); }
-    10% { opacity: 1; transform: translateY(0); }
-    90% { opacity: 1; transform: translateY(0); }
-    100% { opacity: 0; transform: translateY(-10px); }
+    0% {
+        opacity: 0;
+        transform: translateY(10px);
+    }
+    10% {
+        opacity: 1;
+        transform: translateY(0);
+    }
+    90% {
+        opacity: 1;
+        transform: translateY(0);
+    }
+    100% {
+        opacity: 0;
+        transform: translateY(-10px);
+    }
 }
 
 .animate-fade-in-out {

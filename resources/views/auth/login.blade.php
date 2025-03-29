@@ -1,17 +1,19 @@
 <x-guest-layout>
-    {{-- Container responsivo --}}
-    <div class="flex flex-col md:flex-row min-h-screen">
+    {{-- Container tela cheia --}}
+    <div class="flex flex-col w-full md:flex-row h-screen">
 
         {{-- Coluna esquerda - Formulário --}}
-        <div class="w-full md:w-2/5 bg-[#f8ecda] flex flex-col justify-center px-6 md:px-10 py-10 md:py-0">
-            <div class="max-w-md w-full mx-auto">
+        <div class="w-full md:w-2/5 bg-[#f8ecda] flex items-center justify-center px-6 md:px-10 py-8 md:py-0">
+            <div class="w-full max-w-md mx-auto">
 
-                <div class="flex flex-col sm:flex-row items-center sm:items-start gap-4 sm:gap-6">
-                    <x-application-logo class="w-28 sm:w-[180px] rounded-full" />
+                {{-- Logo + Nome --}}
+                <div class="flex flex-col sm:flex-row items-center sm:items-center gap-4 sm:gap-6 justify-center sm:justify-start">
+                    <x-application-logo class="w-24 sm:w-[180px] rounded-full" />
                     <span class="boldonse-regular text-[#004b6b] text-[40px] sm:text-[65px] leading-tight">SIViS</span>
                 </div>
 
-                <h2 class="text-base sm:text-lg text-gray-700 font-semibold text-center mt-6 mb-6">
+                {{-- Subtítulo --}}
+                <h2 class="text-base sm:text-lg text-gray-700 font-semibold text-center sm:text-left mt-6 mb-6">
                     Sistema Integrado de Vigilância Socioassistencial
                 </h2>
 
@@ -57,19 +59,24 @@
                     </div>
                 </form>
 
-                <p class="mt-6 text-xs text-gray-400 text-center sm:text-left">Acesso exclusivo para profissionais autorizados.</p>
+                <p class="mt-6 text-xs text-gray-400 text-center sm:text-left">
+                    Acesso exclusivo para profissionais autorizados.
+                </p>
             </div>
         </div>
 
         {{-- Coluna direita - Apresentação --}}
-        <div class="hidden md:flex w-3/5 bg-[#004b6b] text-white items-center justify-center p-10 relative overflow-hidden">
-            {{-- Fundo com ícones, se quiser --}}
-            <div class="absolute inset-0 bg-contain bg-center opacity-5 z-0" style="background-image: url('{{asset('/img/bg-login.png')}}')"></div>
+        <div class="w-full md:w-3/5 h-full bg-[#004b6b] text-white flex items-center justify-center md:p-10 relative">
+            {{-- Fundo com ícones --}}
+            <div class="absolute inset-0 opacity-5 z-0 bg-login" style="background-image: url('{{ asset('/img/bg-login.png') }}')"></div>
 
-            <div class="max-w-xl z-10">
-                <h1 class="text-3xl mb-4 boldonse-regular">Acompanhamento social com inteligência e humanidade.</h1>
-                <p class="text-lg text-blue-100">
-                    O SIVIS fortalece o trabalho das equipes da assistência social com dados precisos, organização e agilidade na gestão de pessoas, famílias e territórios.
+            <div class="z-10 px-6 md:py-12 py-3 md:px-10 md:py-0 text-center md:text-left max-w-xl flex flex-col justify-center h-full">
+                <h1 class="text-2xl md:text-3xl font-bold mb-4 boldonse-regular leading-tight slogan">
+                    Acompanhamento social com<br class="hidden md:block">
+                    inteligência e humanidade.
+                </h1>
+                <p class="text-base md:text-lg text-blue-100 leading-relaxed">
+                    O SIViS fortalece o trabalho das equipes da assistência social com dados precisos, organização e agilidade na gestão de pessoas, famílias e territórios.
                 </p>
             </div>
         </div>
