@@ -13,16 +13,23 @@ class WebPushController extends Controller
     public function subscribe(Request $request)
     {
         $subscription = $request->getContent();
-        $userId = auth()->id(); // Pegue o ID do usuário logado
+        $userId = auth()->id();
 
         if (!$subscription || !$userId) {
             return response()->json(['error' => 'Subscription inválida'], 400);
         }
 
-        $allSubscriptions = json_decode(file_get_contents(storage_path('push-subscriptions.json')), true) ?? [];
-        $allSubscriptions[$userId] = json_decode($subscription, true);
+        $subscriptionArray = json_decode($subscription, true);
 
-        file_put_contents(storage_path('push-subscriptions.json'), json_encode($allSubscriptions));
+        $allSubscriptions = [];
+        $filePath = storage_path('push-subscriptions.json');
+        if (file_exists($filePath)) {
+            $allSubscriptions = json_decode(file_get_contents($filePath), true) ?? [];
+        }
+
+        $allSubscriptions[$userId] = $subscriptionArray;
+
+        file_put_contents($filePath, json_encode($allSubscriptions, JSON_PRETTY_PRINT));
 
         return response()->json(['success' => 'Inscrição salva!']);
     }
@@ -30,7 +37,13 @@ class WebPushController extends Controller
 
     public function sendNotification(BenefitDelivery $benefitDelivery)
     {
-        $allSubscriptions = json_decode(file_get_contents(storage_path('push-subscriptions.json')), true);
+        $filePath = storage_path('push-subscriptions.json');
+
+        if (!file_exists($filePath)) return;
+
+        $allSubscriptions = json_decode(file_get_contents($filePath), true);
+        $currentUserId = auth()->id();
+
         $webPush = new WebPush([
             'VAPID' => [
                 'subject' => config('app.url'),
@@ -39,26 +52,33 @@ class WebPushController extends Controller
             ],
         ]);
 
-        $currentUserId = auth()->id();
+        $statusLabel = match ($benefitDelivery->status) {
+            'PENDING' => 'Pendente',
+            'DELIVERED' => 'Entregue',
+            'EXPIRED' => 'Expirada',
+            'REISSUED' => 'Reemitida',
+            default => 'Atualizada',
+        };
+
+        $options = [
+            'title' => "Senha {$benefitDelivery->ticket_code} - {$statusLabel}",
+            'body' => "Status alterado para: {$statusLabel}.",
+            'icon' => asset('/img/logo.png'),
+            'tag' => 'delivery-'.$benefitDelivery->id,
+            'data' => [
+                'url' => route('benefit-deliveries.index') . "?highlight={$benefitDelivery->id}",
+            ]
+        ];
 
         foreach ($allSubscriptions as $userId => $subscriptionData) {
-            if ((int)$userId === (int)$currentUserId) {
-                continue; // pula o autor
+            if ((int)$userId === (int)$currentUserId) continue;
+
+            try {
+                $subscription = Subscription::create($subscriptionData);
+                $webPush->queueNotification($subscription, json_encode($options));
+            } catch (\Throwable $e) {
+                \Log::error("Erro ao criar subscription: " . $e->getMessage());
             }
-
-            $subscription = Subscription::create($subscriptionData);
-
-            $options = [
-                'title' => "Senha {$benefitDelivery->ticket_code} - {$statusLabel}",
-                'body' => "Status alterado para: {$statusLabel}.",
-                'icon' => asset('/img/logo.png'),
-                'tag' => 'delivery-'.$benefitDelivery->id,
-                'data' => [
-                    'url' => route('benefit-deliveries.index')."?highlight={$benefitDelivery->id}",
-                ]
-            ];
-
-            $webPush->queueNotification($subscription, json_encode($options));
         }
 
         foreach ($webPush->flush() as $report) {
@@ -68,8 +88,6 @@ class WebPushController extends Controller
                 Log::error("Erro ao enviar notificação: ".$report->getReason());
             }
         }
-
-        return response()->json(['success' => 'Notificação enviada!']);
     }
 
 }
